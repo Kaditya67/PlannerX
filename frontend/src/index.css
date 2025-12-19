@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+/* Configure dark mode to use class strategy */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Define your color palette */
+@theme {
+  --color-background: oklch(1 0 0);
+  --color-foreground: oklch(0.141 0.005 285.823);
+  
+  /* Light theme specific colors */
+  --color-card: oklch(1 0 0);
+  --color-card-foreground: oklch(0.141 0.005 285.823);
+  --color-primary: oklch(0.61 0.194 149.214);
+  --color-primary-foreground: oklch(0.984 0.003 247.858);
+  --color-secondary: oklch(0.967 0.001 286.375);
+  --color-secondary-foreground: oklch(0.21 0.006 285.885);
+  --color-muted: oklch(0.967 0.001 286.375);
+  --color-muted-foreground: oklch(0.552 0.016 285.938);
+  --color-accent: oklch(0.967 0.001 286.375);
+  --color-accent-foreground: oklch(0.21 0.006 285.885);
+  --color-border: oklch(0.92 0.004 286.32);
+  --color-ring: oklch(0.704 0.04 256.788);
+}
+
+/* Dark theme overrides */
+:is(.dark) {
+  --color-background: oklch(0.141 0.005 285.823);
+  --color-foreground: oklch(0.984 0.003 247.858);
+  --color-card: oklch(0.21 0.006 285.885);
+  --color-card-foreground: oklch(0.984 0.003 247.858);
+  --color-primary: oklch(0.61 0.194 149.214);
+  --color-primary-foreground: oklch(0.984 0.003 247.858);
+  --color-secondary: oklch(0.274 0.006 286.033);
+  --color-secondary-foreground: oklch(0.984 0.003 247.858);
+  --color-muted: oklch(0.274 0.006 286.033);
+  --color-muted-foreground: oklch(0.704 0.04 256.788);
+  --color-accent: oklch(0.274 0.006 286.033);
+  --color-accent-foreground: oklch(0.984 0.003 247.858);
+  --color-border: oklch(0.274 0.006 286.033);
+  --color-ring: oklch(0.552 0.016 285.938);
+}
+
+/* Base styles */
+* {
+  border-color: var(--color-border);
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-feature-settings: "rlig" 1, "calt" 1;
+}

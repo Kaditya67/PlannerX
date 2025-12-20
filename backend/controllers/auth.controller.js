@@ -1,6 +1,6 @@
 import asyncHandler from "express-async-handler"
-import connectDB from "../../config/db.js"  // Adjust path from api folder
-import User from "../../models/user.model.js"  // Adjust path from api folder
+import connectDB from "../config/db.js"  // Adjust path from api folder
+import User from "../models/user.model.js"  // Adjust path from api folder
 
 // Helper to send token response
 const sendTokenResponse = (user, statusCode, res) => {

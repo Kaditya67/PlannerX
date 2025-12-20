@@ -1,5 +1,6 @@
 import asyncHandler from "express-async-handler"
-import User from "../models/user.model.js"
+import connectDB from "../../config/db.js"  // Adjust path from api folder
+import User from "../../models/user.model.js"  // Adjust path from api folder
 
 // Helper to send token response
 const sendTokenResponse = (user, statusCode, res) => {
@@ -32,7 +33,15 @@ const sendTokenResponse = (user, statusCode, res) => {
 // @route   POST /api/auth/register
 // @access  Public
 export const register = asyncHandler(async (req, res) => {
+  await connectDB();  // 🔥 Serverless DB connection
+  
   const { name, email, password } = req.body
+
+  // Validate input
+  if (!name || !email || !password) {
+    res.status(400)
+    throw new Error("Please provide name, email, and password")
+  }
 
   // Check if user exists
   const existingUser = await User.findOne({ email: email.toLowerCase() })
@@ -54,6 +63,8 @@ export const register = asyncHandler(async (req, res) => {
 // @route   POST /api/auth/login
 // @access  Public
 export const login = asyncHandler(async (req, res) => {
+  await connectDB();  // 🔥 Serverless DB connection
+  
   const { email, password } = req.body
 
   if (!email || !password) {
@@ -61,7 +72,10 @@ export const login = asyncHandler(async (req, res) => {
     throw new Error("Please provide email and password")
   }
 
-  const user = await User.findOne({ email: email.toLowerCase(), isDeleted: false }).select("+password")
+  const user = await User.findOne({ 
+    email: email.toLowerCase(), 
+    isDeleted: false 
+  }).select("+password")
 
   if (!user) {
     res.status(401)
@@ -85,6 +99,8 @@ export const logout = asyncHandler(async (req, res) => {
   res.cookie("token", "none", {
     expires: new Date(Date.now() + 10 * 1000),
     httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
   })
 
   res.status(200).json({ success: true, message: "Logged out successfully" })
@@ -94,6 +110,8 @@ export const logout = asyncHandler(async (req, res) => {
 // @route   GET /api/auth/me
 // @access  Private
 export const getMe = asyncHandler(async (req, res) => {
+  await connectDB();  // 🔥 For consistency
+  
   res.status(200).json({ success: true, user: req.user })
 })
 
@@ -101,6 +119,8 @@ export const getMe = asyncHandler(async (req, res) => {
 // @route   PUT /api/auth/me
 // @access  Private
 export const updateProfile = asyncHandler(async (req, res) => {
+  await connectDB();  // 🔥 Serverless DB connection
+  
   const { name, avatar, preferences, dailyCapacity } = req.body
 
   const updateData = {}
@@ -109,10 +129,11 @@ export const updateProfile = asyncHandler(async (req, res) => {
   if (preferences) updateData.preferences = { ...req.user.preferences, ...preferences }
   if (dailyCapacity !== undefined) updateData.dailyCapacity = dailyCapacity
 
-  const user = await User.findByIdAndUpdate(req.user._id, updateData, {
-    new: true,
-    runValidators: true,
-  })
+  const user = await User.findByIdAndUpdate(
+    req.user._id, 
+    updateData, 
+    { new: true, runValidators: true }
+  ).select('-password')
 
   res.status(200).json({ success: true, user })
 })
@@ -121,7 +142,14 @@ export const updateProfile = asyncHandler(async (req, res) => {
 // @route   PUT /api/auth/password
 // @access  Private
 export const updatePassword = asyncHandler(async (req, res) => {
+  await connectDB();  // 🔥 Serverless DB connection
+  
   const { currentPassword, newPassword } = req.body
+
+  if (!currentPassword || !newPassword) {
+    res.status(400)
+    throw new Error("Please provide current and new password")
+  }
 
   const user = await User.findById(req.user._id).select("+password")
 

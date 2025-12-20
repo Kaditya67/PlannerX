@@ -11,7 +11,7 @@ export const ITEM_STATUS = {
   IN_PROGRESS: "in_progress",
   COMPLETED: "completed",
   CANCELLED: "cancelled",
-}
+} 
 
 export const ITEM_PRIORITY = {
   LOW: "low",

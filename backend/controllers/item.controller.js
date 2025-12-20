@@ -2,11 +2,13 @@ import asyncHandler from "express-async-handler"
 import Item from "../models/item.model.js"
 import Section from "../models/section.model.js"
 import Plan from "../models/plan.model.js"
+import connectDB from "../config/db.js"  
 
 // @desc    Get items
 // @route   GET /api/items?plan=:planId&section=:sectionId
 // @access  Private
 export const getItems = asyncHandler(async (req, res) => {
+  await connectDB();
   const { plan, section, status, priority } = req.query
 
   const query = { isDeleted: false }
@@ -24,6 +26,7 @@ export const getItems = asyncHandler(async (req, res) => {
 // @route   GET /api/items/:id
 // @access  Private
 export const getItem = asyncHandler(async (req, res) => {
+  await connectDB();
   const item = await Item.findById(req.params.id)
     .populate("assignees", "name email avatar")
     .populate("dependencies")
@@ -41,6 +44,7 @@ export const getItem = asyncHandler(async (req, res) => {
 // @route   POST /api/items
 // @access  Private
 export const createItem = asyncHandler(async (req, res) => {
+  await connectDB();
   const {
     title,
     description,
@@ -95,6 +99,7 @@ export const createItem = asyncHandler(async (req, res) => {
 // @route   PUT /api/items/:id
 // @access  Private
 export const updateItem = asyncHandler(async (req, res) => {
+  await connectDB();
   const {
     title,
     description,
@@ -155,6 +160,7 @@ export const updateItem = asyncHandler(async (req, res) => {
 // @route   PUT /api/items/reorder
 // @access  Private
 export const reorderItems = asyncHandler(async (req, res) => {
+  await connectDB();
   const { items } = req.body // Array of { id, order, section, parentItem }
 
   const bulkOps = items.map(({ id, order, section, parentItem }) => ({
@@ -173,6 +179,7 @@ export const reorderItems = asyncHandler(async (req, res) => {
 // @route   DELETE /api/items/:id
 // @access  Private
 export const deleteItem = asyncHandler(async (req, res) => {
+  await connectDB();
   const item = await Item.findById(req.params.id)
 
   if (!item || item.isDeleted) {

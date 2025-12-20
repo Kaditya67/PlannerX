@@ -2,11 +2,13 @@ import asyncHandler from "express-async-handler"
 import Section from "../models/section.model.js"
 import Item from "../models/item.model.js"
 import Plan from "../models/plan.model.js"
+import connectDB from "../config/db.js"
 
 // @desc    Get sections for a plan
 // @route   GET /api/sections?plan=:planId
 // @access  Private
 export const getSections = asyncHandler(async (req, res) => {
+  await connectDB();
   const { plan } = req.query
 
   const sections = await Section.find({ plan, isDeleted: false }).populate("items").sort({ order: 1 })
@@ -18,6 +20,7 @@ export const getSections = asyncHandler(async (req, res) => {
 // @route   POST /api/sections
 // @access  Private
 export const createSection = asyncHandler(async (req, res) => {
+  await connectDB();
   const { name, description, plan, parentSection, color, startDate, endDate } = req.body
 
   // Get max order
@@ -43,6 +46,7 @@ export const createSection = asyncHandler(async (req, res) => {
 // @route   PUT /api/sections/:id
 // @access  Private
 export const updateSection = asyncHandler(async (req, res) => {
+  await connectDB();
   const { name, description, color, startDate, endDate, isCollapsed } = req.body
 
   let section = await Section.findById(req.params.id)
@@ -65,6 +69,7 @@ export const updateSection = asyncHandler(async (req, res) => {
 // @route   PUT /api/sections/reorder
 // @access  Private
 export const reorderSections = asyncHandler(async (req, res) => {
+  await connectDB();
   const { sections } = req.body // Array of { id, order, parentSection }
 
   const bulkOps = sections.map(({ id, order, parentSection }) => ({
@@ -83,6 +88,7 @@ export const reorderSections = asyncHandler(async (req, res) => {
 // @route   DELETE /api/sections/:id
 // @access  Private
 export const deleteSection = asyncHandler(async (req, res) => {
+  await connectDB();
   const section = await Section.findById(req.params.id)
 
   if (!section || section.isDeleted) {

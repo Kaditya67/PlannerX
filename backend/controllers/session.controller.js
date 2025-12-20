@@ -1,11 +1,13 @@
 import asyncHandler from "express-async-handler"
 import Session from "../models/session.model.js"
 import Item from "../models/item.model.js"
+import connectDB from "../config/db.js"
 
 // @desc    Get sessions
 // @route   GET /api/sessions?plan=:planId&date=:date
 // @access  Private
 export const getSessions = asyncHandler(async (req, res) => {
+  await connectDB();
   const { plan, item, startDate, endDate } = req.query
 
   const query = { user: req.user._id, isDeleted: false }
@@ -30,6 +32,7 @@ export const getSessions = asyncHandler(async (req, res) => {
 // @route   POST /api/sessions
 // @access  Private
 export const createSession = asyncHandler(async (req, res) => {
+  await connectDB();
   const { item, plan, scheduledStart, scheduledEnd, plannedDuration, notes } = req.body
 
   const session = await Session.create({
@@ -51,6 +54,7 @@ export const createSession = asyncHandler(async (req, res) => {
 // @route   PUT /api/sessions/:id
 // @access  Private
 export const updateSession = asyncHandler(async (req, res) => {
+  await connectDB();
   const { scheduledStart, scheduledEnd, actualStart, actualEnd, actualDuration, status, notes } = req.body
 
   let session = await Session.findById(req.params.id)
@@ -93,6 +97,7 @@ export const updateSession = asyncHandler(async (req, res) => {
 // @route   POST /api/sessions/:id/start
 // @access  Private
 export const startSession = asyncHandler(async (req, res) => {
+  await connectDB();
   const session = await Session.findById(req.params.id)
 
   if (!session || session.isDeleted) {
@@ -114,6 +119,7 @@ export const startSession = asyncHandler(async (req, res) => {
 // @route   POST /api/sessions/:id/complete
 // @access  Private
 export const completeSession = asyncHandler(async (req, res) => {
+  await connectDB();
   const session = await Session.findById(req.params.id)
 
   if (!session || session.isDeleted) {
@@ -143,6 +149,7 @@ export const completeSession = asyncHandler(async (req, res) => {
 // @route   DELETE /api/sessions/:id
 // @access  Private
 export const deleteSession = asyncHandler(async (req, res) => {
+  await connectDB();
   const session = await Session.findById(req.params.id)
 
   if (!session || session.isDeleted) {
@@ -166,6 +173,7 @@ export const deleteSession = asyncHandler(async (req, res) => {
 // @route   POST /api/sessions/generate
 // @access  Private
 export const generateSessions = asyncHandler(async (req, res) => {
+  await connectDB();
   const { itemId, sessionDuration = 60, startDate } = req.body
 
   const item = await Item.findById(itemId)

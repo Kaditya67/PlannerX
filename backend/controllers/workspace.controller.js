@@ -2,11 +2,13 @@ import asyncHandler from "express-async-handler"
 import Workspace from "../models/workspace.model.js"
 import Plan from "../models/plan.model.js"
 import { WORKSPACE_ROLES } from "../config/constants.js"
+import connectDB from "../config/db.js"
 
 // @desc    Get all workspaces for user
 // @route   GET /api/workspaces
 // @access  Private
 export const getWorkspaces = asyncHandler(async (req, res) => {
+  await connectDB();
   const workspaces = await Workspace.find({
     $or: [{ owner: req.user._id }, { "members.user": req.user._id }],
     isDeleted: false,
@@ -23,6 +25,7 @@ export const getWorkspaces = asyncHandler(async (req, res) => {
 // @route   GET /api/workspaces/:id
 // @access  Private
 export const getWorkspace = asyncHandler(async (req, res) => {
+  await connectDB();
   const workspace = await Workspace.findById(req.params.id)
     .populate("owner", "name email avatar")
     .populate("members.user", "name email avatar")
@@ -49,6 +52,7 @@ export const getWorkspace = asyncHandler(async (req, res) => {
 // @route   POST /api/workspaces
 // @access  Private
 export const createWorkspace = asyncHandler(async (req, res) => {
+  await connectDB();
   const { name, description, color, icon } = req.body
 
   const workspace = await Workspace.create({
@@ -68,6 +72,7 @@ export const createWorkspace = asyncHandler(async (req, res) => {
 // @route   PUT /api/workspaces/:id
 // @access  Private (Owner/Admin)
 export const updateWorkspace = asyncHandler(async (req, res) => {
+  await connectDB();
   const { name, description, color, icon } = req.body
 
   let workspace = await Workspace.findById(req.params.id)
@@ -102,6 +107,7 @@ export const updateWorkspace = asyncHandler(async (req, res) => {
 // @route   DELETE /api/workspaces/:id
 // @access  Private (Owner only)
 export const deleteWorkspace = asyncHandler(async (req, res) => {
+  await connectDB();
   const workspace = await Workspace.findById(req.params.id)
 
   if (!workspace || workspace.isDeleted) {
@@ -125,6 +131,7 @@ export const deleteWorkspace = asyncHandler(async (req, res) => {
 // @route   POST /api/workspaces/:id/members
 // @access  Private (Owner/Admin)
 export const addMember = asyncHandler(async (req, res) => {
+  await connectDB();
   const { userId, role = WORKSPACE_ROLES.MEMBER } = req.body
 
   const workspace = await Workspace.findById(req.params.id)
@@ -161,6 +168,7 @@ export const addMember = asyncHandler(async (req, res) => {
 // @route   DELETE /api/workspaces/:id/members/:userId
 // @access  Private (Owner/Admin)
 export const removeMember = asyncHandler(async (req, res) => {
+  await connectDB();
   const workspace = await Workspace.findById(req.params.id)
 
   if (!workspace || workspace.isDeleted) {

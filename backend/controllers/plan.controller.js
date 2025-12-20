@@ -3,11 +3,13 @@ import Plan from "../models/plan.model.js"
 import Section from "../models/section.model.js"
 import Item from "../models/item.model.js"
 import Session from "../models/session.model.js"
+import connectDB from "../config/db.js"
 
 // @desc    Get all plans in workspace
 // @route   GET /api/plans?workspace=:workspaceId
 // @access  Private
 export const getPlans = asyncHandler(async (req, res) => {
+  await connectDB();
   const { workspace, type } = req.query
 
   const query = { isDeleted: false }
@@ -26,6 +28,7 @@ export const getPlans = asyncHandler(async (req, res) => {
 // @route   GET /api/plans/:id
 // @access  Private
 export const getPlan = asyncHandler(async (req, res) => {
+  await connectDB();
   const plan = await Plan.findById(req.params.id)
     .populate("createdBy", "name email avatar")
     .populate("collaborators", "name email avatar")
@@ -57,6 +60,7 @@ export const getPlan = asyncHandler(async (req, res) => {
 // @route   POST /api/plans
 // @access  Private
 export const createPlan = asyncHandler(async (req, res) => {
+  await connectDB();
   const {
     name,
     description,
@@ -112,6 +116,7 @@ export const createPlan = asyncHandler(async (req, res) => {
 // @route   PUT /api/plans/:id
 // @access  Private
 export const updatePlan = asyncHandler(async (req, res) => {
+  await connectDB();
   const { name, description, collaborationType, collaborators, startDate, endDate, deadline, color, icon, metadata } =
     req.body
 
@@ -148,6 +153,7 @@ export const updatePlan = asyncHandler(async (req, res) => {
 // @route   DELETE /api/plans/:id
 // @access  Private
 export const deletePlan = asyncHandler(async (req, res) => {
+  await connectDB();
   const plan = await Plan.findById(req.params.id)
 
   if (!plan || plan.isDeleted) {
@@ -168,6 +174,7 @@ export const deletePlan = asyncHandler(async (req, res) => {
 // @route   GET /api/plans/:id/stats
 // @access  Private
 export const getPlanStats = asyncHandler(async (req, res) => {
+  await connectDB();
   const plan = await Plan.findById(req.params.id)
 
   if (!plan || plan.isDeleted) {

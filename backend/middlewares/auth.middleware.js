@@ -1,16 +1,16 @@
 import jwt from "jsonwebtoken"
 import asyncHandler from "express-async-handler"
+import connectDB from "../config/db.js"  
 import User from "../models/user.model.js"
 
 export const protect = asyncHandler(async (req, res, next) => {
+  await connectDB(); 
+  
   let token
 
-  // Check header
   if (req.headers.authorization?.startsWith("Bearer")) {
     token = req.headers.authorization.split(" ")[1]
-  }
-  // Check cookie
-  else if (req.cookies?.token) {
+  } else if (req.cookies?.token) {
     token = req.cookies.token
   }
 
@@ -36,6 +36,8 @@ export const protect = asyncHandler(async (req, res, next) => {
 })
 
 export const optionalAuth = asyncHandler(async (req, res, next) => {
+  await connectDB();  // 🔥 ADD DB CONNECTION
+  
   let token
 
   if (req.headers.authorization?.startsWith("Bearer")) {

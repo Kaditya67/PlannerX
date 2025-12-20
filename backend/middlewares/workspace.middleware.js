@@ -1,17 +1,20 @@
 import asyncHandler from "express-async-handler"
+import connectDB from "../config/db.js"  // 🔥 ADD THIS
 import Workspace from "../models/workspace.model.js"
 import { WORKSPACE_ROLES } from "../config/constants.js"
 
 export const checkWorkspaceAccess = (requiredRoles = []) => {
   return asyncHandler(async (req, res, next) => {
-    const workspaceId = req.params.workspaceId || req.body.workspace
+    await connectDB();  // 🔥 ADD THIS LINE
+    
+    const workspaceId = req.params.workspaceId || req.body.workspace;
 
     if (!workspaceId) {
       res.status(400)
       throw new Error("Workspace ID is required")
     }
 
-    const workspace = await Workspace.findById(workspaceId)
+    const workspace = await Workspace.findById(workspaceId);
 
     if (!workspace || workspace.isDeleted) {
       res.status(404)
@@ -26,7 +29,7 @@ export const checkWorkspaceAccess = (requiredRoles = []) => {
     }
 
     // Check if user is member
-    const member = workspace.members.find((m) => m.user.toString() === req.user._id.toString())
+    const member = workspace.members.find((m) => m.user.toString() === req.user._id.toString());
 
     if (!member) {
       res.status(403)

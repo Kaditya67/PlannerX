@@ -1,15 +1,14 @@
 import express from "express"
 import { getPlans, getPlan, createPlan, updatePlan, deletePlan, getPlanStats } from "../controllers/plan.controller.js"
 import { protect } from "../middlewares/auth.middleware.js"
+import { withDB } from "../middlewares/db.middleware.js"
 
 const router = express.Router()
 
 router.use(protect)
 
-router.route("/").get(getPlans).post(createPlan)
-
-router.route("/:id").get(getPlan).put(updatePlan).delete(deletePlan)
-
-router.get("/:id/stats", getPlanStats)
+router.route("/").get(withDB, getPlans).post(withDB, createPlan)  
+router.route("/:id").get(withDB, getPlan).put(withDB, updatePlan).delete(withDB, deletePlan)  
+router.get("/:id/stats", withDB, getPlanStats)  
 
 export default router

@@ -1,0 +1,93 @@
+# Phase 1: Environment & Tooling
+- [x] Install Python 3.10+ (Required for modern type hinting) [High] (30m)
+  Ensure you have a clean install or use pyenv to manage versions.
+- Master Virtual Environments (venv, poetry, or uv) [High] (1h)
+  Critical for isolation. Learn how to create, activate, and manage dependencies.
+- Git Version Control: Repos, .gitignore, Branching [Medium] (2h)
+  Basic hygiene for any coding project.
+- Project Structure: src/, tests/, notebooks/ [Medium] (30m)
+  Set up a standard folder structure for scalability.
+- Logging Configuration (Crucial for Agent observability) [High] (1h)
+  Learn to use the `logging` module effectively instead of print statements.
+- Basic CLI Entry Points (argparse/click/typer) [Low] (1h)
+  Make your agents interactive from the command line.
+
+# Phase 2: Core Python Mastery
+- Type Hinting & Pydantic (Essential for LLM Structured Outputs) [High] (3h)
+  Deep dive into types. This is non-negotiable for working with LLM APIs.
+- Decorators (Used for Tool/Function registration) [Medium] (2h)
+  Learn how to wrap functions, essential for creating "Tools" for agents.
+- Context Managers (Resource handling) [Medium] (1h)
+  Understand `with` statements for managing connections and files.
+- Generators & Iterators (Streaming LLM responses) [High] (2h)
+  Learn `yield` for handling streaming data from LLMs efficiently.
+- Error Handling: Custom Exceptions & Tracebacks [Medium] (1h)
+  Build robust agents that don't crash on API errors.
+
+# Phase 3: Data Structures & Serialization
+- Dataclasses vs Pydantic Models [Medium] (1h)
+  Know when to use which for data modelling.
+- Dictionary Manipulations (JSON payloads) [Medium] (1h)
+  Agents communicate in JSON; master nested dict access and manipulation.
+- List Comprehensions & Advanced Slicing [Low] (1h)
+  Write cleaner, more pythonic code.
+- Sets for De-duplication [Low] (30m)
+  Efficiently handle unique collections of items/documents.
+- JSON Serialization/Deserialization (json, msgspec) [High] (1h)
+  Parsing LLM outputs and preparing API requests.
+
+# Phase 4: Object-Oriented Design for Agents
+- Abstract Base Classes (Defining Tool interfaces) [High] (2h)
+  Create consistent interfaces for your agent tools.
+- Protocols (Duck typing for agent behaviors) [Medium] (2h)
+  Flexible typing for plugin architectures.
+- Composition over Inheritance [Medium] (1h)
+  Build agents by composing skills rather than deep class hierarchies.
+- Magic Methods (__call__, __repr__, __str__) [Medium] (1h)
+  Make your agent objects behave intuitively.
+- The State Design Pattern (Managing Agent state) [High] (3h)
+  Crucial for managing complex agent conversations and flows.
+
+# Phase 5: File I/O & Persistence
+- pathlib mastery (Modern path handling) [Low] (30m)
+  Stop using os.path.join; use the modern OO approach.
+- Reading/Writing text, JSON, and YAML/TOML config files [Medium] (1h)
+  Configuration management for your agents.
+- Environment Variables (python-dotenv for API Keys) [High] (30m)
+  Security best practice. Never hardcode keys.
+- Basic SQLite/Vector Store interaction logic [High] (3h)
+  The foundation of RAG (Retrieval Augmented Generation).
+
+# Phase 6: Networking & APIs
+- requests / httpx libraries [High] (2h)
+  The eyes and ears of your agent. specific focus on `httpx` for async.
+- Handling HTTP Methods (GET, POST) [Medium] (1h)
+  Understand the basics of REST.
+- Authentication (Bearer Tokens, API Keys) [High] (1h)
+  How to securely talk to providers like OpenAI, Anthropic, etc.
+- Handling Timeouts, Retries, and Backoff (Robustness) [High] (2h)
+  APIs fail. Your agent should handle it gracefully.
+- Parsing API Responses & JSON Schema Validation [High] (2h)
+  Ensure the data you get back is what you expect.
+
+# Phase 7: Asyncio & Concurrency (Critical for Multi-Agent)
+- The Event Loop [Medium] (1h)
+  Understand how Python handles concurrency under the hood.
+- async / await keywords [High] (2h)
+  Writing non-blocking code for high-performance agents.
+- asyncio.gather (Parallel tool execution) [High] (2h)
+  Run multiple agent tools or LLM calls effectively in parallel.
+- Async Context Managers [Medium] (1h)
+  Managing async resources like database connections.
+- Rate Limiting basics [High] (2h)
+  Respect API limits while maintaining throughput.
+
+# Phase 8: Testing & Debugging
+- pytest framework [High] (2h)
+  Standard testing framework.
+- Mocking LLM calls & API responses [High] (3h)
+  Test your logic without spending money on tokens.
+- Debugging with pdb or IDE debugger [Medium] (1h)
+  Step through complex agent logic.
+- Logging strategies for tracing execution flows [Medium] (2h)
+  Follow the chain of thought across multiple steps.

@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card.
 import Badge from "../components/ui/Badge.jsx"
 import ItemRow from "./ItemRow.jsx"
 import SectionActions from "./SectionActions.jsx"
+import QuickEntry from "./QuickEntry.jsx"
 import { ITEM_STATUS } from "../utils/constants.js"
 
 function PlanSections({
@@ -16,8 +17,10 @@ function PlanSections({
   onEditSection,
   onDeleteSection,
   onAddItem,
+  onQuickAdd,
   onToggleItem,
   onEditItem,
+  onUpdateItem,
   onDeleteItem,
   getSectionItems,
   getUnsectionedItems,
@@ -78,14 +81,14 @@ function PlanSections({
                 </div>
 
                 {/* RIGHT: actions */}
-                <div
-                  className="flex items-center gap-2"
-                  onClick={(e) => e.stopPropagation()}
-                >
+                <div className="flex items-center gap-2">
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => onAddItem(null, section._id)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onAddItem(null, section._id)
+                    }}
                   >
                     <Plus className="mr-1 h-4 w-4" />
                     Add Item
@@ -113,14 +116,10 @@ function PlanSections({
                     <p className="mb-4 text-muted-foreground">
                       No items in this section
                     </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onAddItem(null, section._id)}
-                    >
-                      <Plus className="mr-1 h-4 w-4" />
-                      Add your first item
-                    </Button>
+                    <QuickEntry 
+                      onAdd={(title) => onQuickAdd(title, section._id)} 
+                      placeholder="Add your first item"
+                    />
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -130,6 +129,7 @@ function PlanSections({
                         item={item}
                         onToggle={() => onToggleItem(item)}
                         onEdit={() => onEditItem(item)}
+                        onUpdate={(updates) => onUpdateItem(item, updates)}
                         onDelete={() => onDeleteItem(item)}
                       />
                     ))}
@@ -145,17 +145,6 @@ function PlanSections({
       {getUnsectionedItems().length > 0 && (
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Unsectioned Items</CardTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onAddItem(null, null)}
-              >
-                <Plus className="mr-1 h-4 w-4" />
-                Add Item
-              </Button>
-            </div>
           </CardHeader>
 
           <CardContent>
@@ -166,6 +155,7 @@ function PlanSections({
                   item={item}
                   onToggle={() => onToggleItem(item)}
                   onEdit={() => onEditItem(item)}
+                  onUpdate={(updates) => onUpdateItem(item, updates)}
                   onDelete={() => onDeleteItem(item)}
                 />
               ))}

@@ -3,6 +3,7 @@ import Workspace from "../models/workspace.model.js"
 import Plan from "../models/plan.model.js"
 import { WORKSPACE_ROLES } from "../config/constants.js"
 import connectDB from "../config/db.js"
+import { ApiResponse } from "../utils/ApiResponse.js"
 
 // @desc    Get all workspaces for user
 // @route   GET /api/workspaces
@@ -17,8 +18,10 @@ export const getWorkspaces = asyncHandler(async (req, res) => {
     .populate("members.user", "name email avatar")
     .populate("plansCount")
     .sort({ updatedAt: -1 })
-
-  res.status(200).json({ success: true, count: workspaces.length, data: workspaces })
+  
+  res.status(200).json(
+    new ApiResponse(200, workspaces, "Workspaces fetched successfully")
+  )
 })
 
 // @desc    Get single workspace
@@ -65,7 +68,9 @@ export const createWorkspace = asyncHandler(async (req, res) => {
 
   await workspace.populate("owner", "name email avatar")
 
-  res.status(201).json({ success: true, data: workspace })
+  res.status(201).json(
+    new ApiResponse(201, workspace, "Workspace created successfully")
+  )
 })
 
 // @desc    Update workspace
@@ -124,7 +129,9 @@ export const deleteWorkspace = asyncHandler(async (req, res) => {
   await workspace.softDelete()
   await Plan.updateMany({ workspace: workspace._id }, { isDeleted: true, deletedAt: new Date() })
 
-  res.status(200).json({ success: true, message: "Workspace deleted" })
+  res.status(200).json(
+    new ApiResponse(200, null, "Workspace deleted successfully")
+  )
 })
 
 // @desc    Add member to workspace

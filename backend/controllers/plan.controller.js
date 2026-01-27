@@ -3,6 +3,7 @@ import Plan from "../models/plan.model.js"
 import Section from "../models/section.model.js"
 import Item from "../models/item.model.js"
 import Session from "../models/session.model.js"
+import { ApiResponse } from "../utils/ApiResponse.js"
 import connectDB from "../config/db.js"
 
 // @desc    Get all plans in workspace
@@ -196,4 +197,131 @@ export const getPlanStats = asyncHandler(async (req, res) => {
   }
 
   res.status(200).json({ success: true, data: stats })
+})
+
+// @desc    Import plan structure (Smart Editor - Sync Mode)
+// @route   POST /api/plans/:id/import
+// @access  Private
+export const importPlanStructure = asyncHandler(async (req, res) => {
+  await connectDB();
+  const { sections } = req.body // Expecting array of { name, items: [{ title, priority, plannedDuration }] }
+  const planId = req.params.id
+
+  const plan = await Plan.findById(planId)
+
+  if (!plan || plan.isDeleted) {
+    res.status(404)
+    throw new Error("Plan not found")
+  }
+
+  // Check permissions
+  if (plan.createdBy.toString() !== req.user._id.toString()) {
+    const isCollaborator = plan.collaborators.some(c => c.toString() === req.user._id.toString())
+    if (!isCollaborator) {
+      res.status(403)
+      throw new Error("Not authorized to update this plan")
+    }
+  }
+
+  // 1. Fetch all existing active sections and items
+  const existingSections = await Section.find({ plan: planId, isDeleted: false })
+  const existingItems = await Item.find({ plan: planId, isDeleted: false })
+
+  const processedSectionIds = new Set()
+  const processedItemIds = new Set()
+
+  const finalSections = []
+
+  // 2. Process Input Structure
+  let sectionOrder = 0
+  
+  for (const sectionData of sections) {
+    let section = existingSections.find(
+      (s) => s.name.toLowerCase() === sectionData.name.toLowerCase()
+    )
+
+    if (section) {
+      // Update existing section
+      section.order = sectionOrder++
+      section.isDeleted = false // Ensure it's active
+      await section.save()
+    } else {
+      // Create new section
+      section = await Section.create({
+        name: sectionData.name,
+        plan: planId,
+        order: sectionOrder++,
+      })
+    }
+    
+    processedSectionIds.add(section._id.toString())
+    finalSections.push(section)
+
+    // Process Items for this Section
+    if (sectionData.items && sectionData.items.length > 0) {
+      let itemOrder = 0
+      
+      for (const itemData of sectionData.items) {
+        // Try to find existing item in this section with same title
+        let item = existingItems.find(
+          (i) => 
+            i.section.toString() === section._id.toString() && 
+            i.title.toLowerCase() === itemData.title.toLowerCase()
+        )
+
+        if (item) {
+          // Update existing item (preserve status, but update meta)
+          item.order = itemOrder++
+          item.priority = itemData.priority || item.priority
+          item.plannedDuration = itemData.plannedDuration || item.plannedDuration
+          item.description = itemData.description || item.description || ""
+          
+          // Explicitly update status if provided (allows [x] syntax to mark done)
+          if (itemData.status) {
+            item.status = itemData.status
+          }
+          
+          item.isDeleted = false
+          await item.save()
+        } else {
+          // Create new item
+          item = await Item.create({
+            title: itemData.title,
+            description: itemData.description || "",
+            plan: planId,
+            section: section._id,
+            order: itemOrder++,
+            status: itemData.status || "todo",
+            priority: itemData.priority || "medium",
+            plannedDuration: itemData.plannedDuration || 60
+          })
+        }
+        processedItemIds.add(item._id.toString())
+      }
+    }
+  }
+
+  // 3. Soft Delete Orphans (items/sections no longer in the text)
+  
+  // Delete orphaned items
+  const itemsToDelete = existingItems.filter(i => !processedItemIds.has(i._id.toString()))
+  if (itemsToDelete.length > 0) {
+    await Item.updateMany(
+      { _id: { $in: itemsToDelete.map(i => i._id) } },
+      { isDeleted: true, deletedAt: new Date() }
+    )
+  }
+
+  // Delete orphaned sections
+  const sectionsToDelete = existingSections.filter(s => !processedSectionIds.has(s._id.toString()))
+  if (sectionsToDelete.length > 0) {
+    await Section.updateMany(
+      { _id: { $in: sectionsToDelete.map(s => s._id) } },
+      { isDeleted: true, deletedAt: new Date() }
+    )
+  }
+
+  res.status(200).json(
+    new ApiResponse(200, { sections: finalSections }, "Plan synced successfully")
+  )
 })

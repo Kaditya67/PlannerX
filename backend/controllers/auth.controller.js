@@ -1,6 +1,7 @@
 import asyncHandler from "express-async-handler"
 import connectDB from "../config/db.js"  // Adjust path from api folder
 import User from "../models/user.model.js"  // Adjust path from api folder
+import { ApiResponse } from "../utils/ApiResponse.js"
 
 // Helper to send token response
 const sendTokenResponse = (user, statusCode, res) => {
@@ -22,11 +23,9 @@ const sendTokenResponse = (user, statusCode, res) => {
     dailyCapacity: user.dailyCapacity,
   }
 
-  res.status(statusCode).cookie("token", token, cookieOptions).json({
-    success: true,
-    token,
-    user: userData,
-  })
+  res.status(statusCode).cookie("token", token, cookieOptions).json(
+    new ApiResponse(statusCode, { token, user: userData }, "Authentication successful")
+  )
 }
 
 // @desc    Register user
@@ -103,7 +102,9 @@ export const logout = asyncHandler(async (req, res) => {
     sameSite: "lax",
   })
 
-  res.status(200).json({ success: true, message: "Logged out successfully" })
+  res.status(200).json(
+    new ApiResponse(200, null, "Logged out successfully")
+  )
 })
 
 // @desc    Get current user
@@ -112,7 +113,9 @@ export const logout = asyncHandler(async (req, res) => {
 export const getMe = asyncHandler(async (req, res) => {
   await connectDB();  // 🔥 For consistency
   
-  res.status(200).json({ success: true, user: req.user })
+  res.status(200).json(
+    new ApiResponse(200, { user: req.user }, "User profile fetched successfully")
+  )
 })
 
 // @desc    Update user profile
@@ -135,7 +138,9 @@ export const updateProfile = asyncHandler(async (req, res) => {
     { new: true, runValidators: true }
   ).select('-password')
 
-  res.status(200).json({ success: true, user })
+  res.status(200).json(
+    new ApiResponse(200, { user }, "Profile updated successfully")
+  )
 })
 
 // @desc    Update password

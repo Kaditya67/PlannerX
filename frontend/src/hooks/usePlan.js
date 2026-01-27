@@ -257,6 +257,23 @@ export function usePlan(planId, toast) {
     }
   }
 
+  const handleQuickAddItem = async (title, sectionId) => {
+    try {
+      const { data } = await itemAPI.create({
+        title,
+        plan: planId,
+        section: sectionId,
+        priority: "medium",
+        plannedDuration: 60,
+      })
+      setItems((prev) => [...prev, data])
+      toast.success("Item added")
+      updatePlanProgress()
+    } catch (error) {
+      toast.error(error.message)
+    }
+  }
+
   const handleToggleItemStatus = async (item) => {
     const newStatus = item.status === ITEM_STATUS.COMPLETED ? ITEM_STATUS.TODO : ITEM_STATUS.COMPLETED
 
@@ -287,6 +304,22 @@ export function usePlan(planId, toast) {
     }
   }
 
+  const handleUpdateItem = async (item, updates) => {
+    // Optimistic update
+    const updatedItem = { ...item, ...updates }
+    setItems((prev) => prev.map((i) => (i._id === item._id ? updatedItem : i)))
+
+    try {
+      const { data } = await itemAPI.update(item._id, updates)
+      setItems((prev) => prev.map((i) => (i._id === data._id ? data : i)))
+      updatePlanProgress()
+      toast.success("Item updated")
+    } catch (error) {
+      setItems((prev) => prev.map((i) => (i._id === item._id ? item : i)))
+      toast.error("Failed to update item")
+    }
+  }
+
   const getSectionItems = (sectionId) => {
     return items.filter((item) => item.section === sectionId)
   }
@@ -313,6 +346,7 @@ export function usePlan(planId, toast) {
     toggleSection,
     openSectionModal,
     openItemModal,
+    handleQuickAddItem,
     handleSectionSubmit,
     handleItemSubmit,
     handleToggleItemStatus,
@@ -323,6 +357,8 @@ export function usePlan(planId, toast) {
     setSectionForm,
     setItemForm,
     getSectionItems,
-    getUnsectionedItems
+    getUnsectionedItems,
+    handleUpdateItem, // Export new handler
+    handleQuickAddItem
   }
 }

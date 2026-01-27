@@ -12,8 +12,8 @@ export function AuthProvider({ children }) {
       const token = localStorage.getItem("token")
       if (token) {
         try {
-          const { user } = await authAPI.getMe()
-          setUser(user)
+          const { data } = await authAPI.getMe()
+          setUser(data.user)
         } catch (error) {
           localStorage.removeItem("token")
           localStorage.removeItem("user")
@@ -25,7 +25,8 @@ export function AuthProvider({ children }) {
   }, [])
 
   const login = async (credentials) => {
-    const { token, user } = await authAPI.login(credentials)
+    const { data } = await authAPI.login(credentials)
+    const { token, user } = data
     localStorage.setItem("token", token)
     localStorage.setItem("user", JSON.stringify(user))
     setUser(user)
@@ -33,7 +34,8 @@ export function AuthProvider({ children }) {
   }
 
   const register = async (userData) => {
-    const { token, user } = await authAPI.register(userData)
+    const { data } = await authAPI.register(userData)
+    const { token, user } = data
     localStorage.setItem("token", token)
     localStorage.setItem("user", JSON.stringify(user))
     setUser(user)

@@ -14,12 +14,7 @@ function ItemModal({
   currentSectionId,
 }) {
   const handleSubmit = (e) => {
-    e.preventDefault()
-
-    onSubmit({
-      ...form,
-      sectionId: editingItem?.sectionId ?? currentSectionId ?? null,
-    })
+    onSubmit(e)
   }
 
   const handleClose = () => {

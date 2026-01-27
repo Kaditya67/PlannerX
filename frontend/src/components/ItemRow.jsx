@@ -2,23 +2,23 @@ import { Circle, CheckCircle2, Clock, MoreVertical, Pencil, Trash2 } from "lucid
 import Button from "../components/ui/Button.jsx"
 import Badge from "../components/ui/Badge.jsx"
 import { Dropdown, DropdownItem, DropdownSeparator } from "../components/ui/Dropdown.jsx"
-import { STATUS_CONFIG, PRIORITY_CONFIG, ITEM_STATUS } from "../utils/constants.js"
+import { PRIORITY_CONFIG, ITEM_STATUS } from "../utils/constants.js"
 import { formatDuration, cn } from "../utils/helpers.js"
 
-function ItemRow({ item, onToggle, onEdit, onDelete }) {
-  const statusConfig = STATUS_CONFIG[item.status] || STATUS_CONFIG.todo
+function ItemRow({ item, onToggle, onEdit, onDelete, onUpdate }) {
   const priorityConfig = PRIORITY_CONFIG[item.priority] || PRIORITY_CONFIG.medium
   const isCompleted = item.status === ITEM_STATUS.COMPLETED
 
   return (
-    <div className="group flex items-center gap-3 rounded-lg border border-border p-3 transition-all hover:bg-accent/50 hover:border-primary/20">
+    <div className="flex items-center gap-3 rounded-lg border p-3 transition-all hover:bg-accent/50 hover:border-primary/20">
+      
+      {/* Toggle */}
       <button
         onClick={(e) => {
           e.stopPropagation()
-          onToggle()
+          onToggle(item)
         }}
         className="shrink-0 hover:scale-110 transition-transform"
-        aria-label={isCompleted ? "Mark as todo" : "Mark as completed"}
       >
         {isCompleted ? (
           <CheckCircle2 className="h-5 w-5 text-success" />
@@ -27,13 +27,19 @@ function ItemRow({ item, onToggle, onEdit, onDelete }) {
         )}
       </button>
 
-      <div className="flex-1 min-w-0" onClick={onEdit} style={{ cursor: 'pointer' }}>
-        <p className={cn("font-medium text-foreground", isCompleted && "line-through text-muted-foreground")}>
+      {/* Title */}
+      <div className="flex-1 min-w-0 cursor-pointer" onClick={() => onEdit(item)}>
+        <p className={cn("font-medium", isCompleted && "line-through text-muted-foreground")}>
           {item.title}
         </p>
-        {item.description && <p className="mt-0.5 text-sm text-muted-foreground line-clamp-1">{item.description}</p>}
+        {item.description && (
+          <p className="mt-0.5 text-sm text-muted-foreground line-clamp-1">
+            {item.description}
+          </p>
+        )}
       </div>
 
+      {/* Meta */}
       <div className="flex items-center gap-2 shrink-0">
         {item.plannedDuration > 0 && (
           <div className="flex items-center gap-1 text-sm text-muted-foreground">
@@ -41,37 +47,53 @@ function ItemRow({ item, onToggle, onEdit, onDelete }) {
             {formatDuration(item.plannedDuration)}
           </div>
         )}
+
         <Badge
           variant={
             item.priority === "high"
               ? "destructive"
               : item.priority === "medium"
-              ? "secondary"
-              : "outline"
+              ? "warning"
+              : "info"
           }
-          className="whitespace-nowrap"
         >
           {priorityConfig.label}
         </Badge>
+
+        {/* Actions */}
         <Dropdown
+          align="right"
           trigger={
             <Button
               variant="ghost"
               size="icon"
-              onClick={(e) => e.stopPropagation()}
-              className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-accent"
             >
               <MoreVertical className="h-4 w-4" />
             </Button>
           }
-          align="right"
         >
-          <DropdownItem onClick={onEdit}>
+          <DropdownItem onClick={() => onEdit(item)}>
             <Pencil className="mr-2 h-4 w-4" />
             Edit
           </DropdownItem>
+          
           <DropdownSeparator />
-          <DropdownItem onClick={onDelete} destructive>
+          <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Priority</div>
+          <DropdownItem onClick={() => onUpdate({ priority: "high" })}>
+            <div className="h-2 w-2 rounded-full bg-red-500 mr-2" />
+            High
+          </DropdownItem>
+          <DropdownItem onClick={() => onUpdate({ priority: "medium" })}>
+            <div className="h-2 w-2 rounded-full bg-yellow-500 mr-2" />
+            Medium
+          </DropdownItem>
+          <DropdownItem onClick={() => onUpdate({ priority: "low" })}>
+            <div className="h-2 w-2 rounded-full bg-blue-500 mr-2" />
+            Low
+          </DropdownItem>
+
+          <DropdownSeparator />
+          <DropdownItem onClick={() => onDelete(item)} destructive>
             <Trash2 className="mr-2 h-4 w-4" />
             Delete
           </DropdownItem>

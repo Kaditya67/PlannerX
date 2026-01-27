@@ -7,20 +7,33 @@ function Dropdown({ trigger, children, align = "left", className }) {
 
   useEffect(() => {
     function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
         setIsOpen(false)
       }
     }
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
+
+    document.addEventListener("click", handleClickOutside)
+    return () => document.removeEventListener("click", handleClickOutside)
   }, [])
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <div onClick={() => setIsOpen(v => !v)}>{trigger}</div>
+      {/* Trigger */}
+      <div
+        onClick={(e) => {
+          e.stopPropagation() // 🔥 REQUIRED
+          setIsOpen((v) => !v)
+        }}
+      >
+        {trigger}
+      </div>
 
       {isOpen && (
         <div
+          onClick={(e) => e.stopPropagation()} // 🔥 REQUIRED
           className={cn(
             "absolute z-50 mt-2 min-w-[8rem] rounded-md border p-1 shadow-md",
             "bg-card text-card-foreground border-border",
@@ -39,9 +52,12 @@ function Dropdown({ trigger, children, align = "left", className }) {
 function DropdownItem({ children, onClick, className, destructive = false }) {
   return (
     <button
-      onClick={onClick}
+      onClick={(e) => {
+        e.stopPropagation() // 🔥 REQUIRED
+        onClick?.()
+      }}
       className={cn(
-        "flex w-full items-center rounded-sm px-2 py-1.5 text-sm",
+        "flex w-full items-center rounded-sm px-2 py-1.5 text-sm text-left",
         "text-foreground hover:bg-accent",
         destructive && "text-destructive hover:bg-destructive/10",
         className

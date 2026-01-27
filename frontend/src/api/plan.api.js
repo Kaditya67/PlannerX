@@ -12,4 +12,6 @@ export const planAPI = {
   delete: (id) => apiClient.delete(`/plans/${id}`),
 
   getStats: (id) => apiClient.get(`/plans/${id}/stats`),
+
+  importStructure: (id, sections) => apiClient.post(`/plans/${id}/import`, { sections }),
 }

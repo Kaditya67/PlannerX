@@ -13,6 +13,7 @@ import PlanHeader from "../components/PlanHeader.jsx"
 import PlanSections from "../components/PlanSections.jsx"
 import SectionModal from "../components/SectionModal.jsx"
 import ItemModal from "../components/ItemModal.jsx"
+import SmartEditor from "../components/SmartEditor.jsx"
 import { usePlan } from "../hooks/usePlan.js"
 import { formatDuration } from "../utils/helpers.js"
 
@@ -49,9 +50,12 @@ function PlanPage() {
     setSectionForm,
     setItemForm,
     getSectionItems,
-    getUnsectionedItems
+    getUnsectionedItems,
+    handleUpdateItem,
+    handleQuickAddItem
   } = usePlan(planId, toast)
-
+  
+  const [smartEditorOpen, setSmartEditorOpen] = useState(false)
   const [planModalOpen, setPlanModalOpen] = useState(false)
   const [planSubmitting, setPlanSubmitting] = useState(false)
   const [planForm, setPlanForm] = useState({
@@ -96,6 +100,27 @@ function PlanPage() {
     }
   }
 
+  const handleDownload = () => {
+    if (!plan) return
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ plan, sections, items }, null, 2))
+    const downloadAnchorNode = document.createElement('a')
+    downloadAnchorNode.setAttribute("href", dataStr)
+    downloadAnchorNode.setAttribute("download", `${plan.name.replace(/\s+/g, '_')}_plan.json`)
+    document.body.appendChild(downloadAnchorNode)
+    downloadAnchorNode.click()
+    downloadAnchorNode.remove()
+  }
+
+  const handleSmartImport = async (sectionsToImport) => {
+    try {
+      await planAPI.importStructure(planId, sectionsToImport)
+      toast.success("Plan structure imported")
+      window.location.reload()
+    } catch (error) {
+      toast.error(error.message || "Import failed")
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -119,8 +144,10 @@ function PlanPage() {
 
         <PlanHeader 
           plan={plan} 
-          onEditPlan={openPlanModal}  // Use openPlanModal instead
+          onEditPlan={openPlanModal}
           onAddSection={() => openSectionModal()}
+          onDownload={handleDownload}
+          onSmartEdit={() => setSmartEditorOpen(true)}
         />
 
         {/* Progress Card */}
@@ -164,8 +191,10 @@ function PlanPage() {
         onEditSection={openSectionModal}
         onDeleteSection={handleDeleteSection}
         onAddItem={openItemModal}
+        onQuickAdd={handleQuickAddItem}
         onToggleItem={handleToggleItemStatus}
         onEditItem={openItemModal}
+        onUpdateItem={handleUpdateItem}
         onDeleteItem={handleDeleteItem}
         getSectionItems={getSectionItems}
         getUnsectionedItems={getUnsectionedItems}
@@ -192,6 +221,18 @@ function PlanPage() {
         onSubmit={handleItemSubmit}
         submitting={submitting}
         currentSectionId={currentSectionId}
+      />
+
+
+
+      {/* Smart Editor */}
+      <SmartEditor
+        isOpen={smartEditorOpen}
+        onClose={() => setSmartEditorOpen(false)}
+        onImport={handleSmartImport}
+        planName={plan?.name}
+        initialSections={sections}
+        initialItems={items}
       />
 
       {/* Plan Modal - NEW */}

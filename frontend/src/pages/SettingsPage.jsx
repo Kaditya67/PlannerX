@@ -30,7 +30,7 @@ function SettingsPage() {
 
     try {
       const { data } = await authAPI.updateProfile(profileForm)
-      setUser(data)
+      setUser(data.user)
       toast.success("Profile updated successfully")
     } catch (error) {
       toast.error(error.message)

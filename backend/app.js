@@ -3,10 +3,7 @@ import cors from "cors"
 import helmet from "helmet"
 import morgan from "morgan"
 import cookieParser from "cookie-parser"
-import rateLimit from "express-rate-limit"
-import dotenv from "dotenv"
-
-// Route imports
+import { env } from "./config/env.js"
 import authRoutes from "./routes/auth.routes.js"
 import workspaceRoutes from "./routes/workspace.routes.js"
 import planRoutes from "./routes/plan.routes.js"
@@ -18,7 +15,6 @@ import sessionRoutes from "./routes/session.routes.js"
 import errorHandler from "./middlewares/error.middleware.js"
 import notFound from "./middlewares/notFound.middleware.js"
 
-dotenv.config()
 
 const app = express()
 
@@ -30,8 +26,11 @@ app.use(helmet())
 /* -------------------------------------------
    CORS
 -------------------------------------------- */
-const allowedOrigins = process.env.CORS_ORIGIN
-  ? process.env.CORS_ORIGIN.split(",")
+/* -------------------------------------------
+   CORS
+-------------------------------------------- */
+const allowedOrigins = env.CORS_ORIGIN
+  ? env.CORS_ORIGIN.split(",").map((origin) => origin.trim())
   : ["http://localhost:5173"]
 
 app.use(
@@ -62,14 +61,20 @@ app.use(cookieParser())
 /* -------------------------------------------
    LOGGING (DEV ONLY)
 -------------------------------------------- */
-if (process.env.NODE_ENV === "development") {
+/* -------------------------------------------
+   LOGGING (DEV ONLY)
+-------------------------------------------- */
+if (env.NODE_ENV === "development") {
   app.use(morgan("dev"))
 }
 
 /* -------------------------------------------
    RATE LIMIT (PROD ONLY)
 -------------------------------------------- */
-if (process.env.NODE_ENV === "production") {
+/* -------------------------------------------
+   RATE LIMIT (PROD ONLY)
+-------------------------------------------- */
+if (env.NODE_ENV === "production") {
   const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 min
     max: 100,               // per IP

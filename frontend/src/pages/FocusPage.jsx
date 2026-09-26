@@ -14,6 +14,8 @@ import {
   Coffee,
   RotateCcw,
   Sliders,
+  Search,
+  X,
 } from "lucide-react"
 
 import Button from "../components/ui/Button.jsx"
@@ -64,6 +66,8 @@ function FocusPage() {
 
   const [selectedItem, setSelectedItem] = useState(null)
   const [activeSession, setActiveSession] = useState(null)
+  const [taskSearch, setTaskSearch] = useState("")
+  const [taskPlanFilter, setTaskPlanFilter] = useState("ALL")
 
   // Custom timer durations state
   const [durations, setDurations] = useState(getTimerDurations)
@@ -408,6 +412,15 @@ function FocusPage() {
   const rawProgress = totalModeSec > 0 ? ((totalModeSec - timeLeft) / totalModeSec) * 100 : 0
   const progress = Number.isFinite(rawProgress) ? Math.min(100, Math.max(0, rawProgress)) : 0
 
+  // Filter tasks by search query and plan selector
+  const filteredItems = items.filter((item) => {
+    const matchesSearch = !taskSearch.trim() || 
+      item.title?.toLowerCase().includes(taskSearch.toLowerCase()) ||
+      item.planName?.toLowerCase().includes(taskSearch.toLowerCase())
+    const matchesPlan = taskPlanFilter === "ALL" || item.plan === taskPlanFilter || item.planName === taskPlanFilter
+    return matchesSearch && matchesPlan
+  })
+
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -436,13 +449,13 @@ function FocusPage() {
         </Button>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* TIMER */}
-        <Card>
+      <div className="grid gap-6 lg:grid-cols-12 items-start">
+        {/* TIMER CARD */}
+        <Card className="lg:col-span-6 xl:col-span-7 flex flex-col justify-between">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
-                {isWorking ? <Zap /> : <Coffee />}
+                {isWorking ? <Zap className="text-emerald-500" /> : <Coffee className="text-amber-500" />}
                 {isWorking ? "Focus Time" : "Break Time"}
               </CardTitle>
 
@@ -466,7 +479,25 @@ function FocusPage() {
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-2 pb-6">
+            {/* Active Task Tag inside Timer */}
+            {selectedItem && (
+              <div className="mb-4 mx-auto max-w-sm flex items-center justify-between gap-2 px-3 py-1.5 rounded-full bg-accent/60 border border-border text-xs">
+                <div className="flex items-center gap-1.5 truncate">
+                  <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: selectedItem.planColor || "#10b981" }} />
+                  <span className="font-medium text-foreground truncate">{selectedItem.title}</span>
+                  <span className="text-muted-foreground truncate">({selectedItem.planName})</span>
+                </div>
+                <button
+                  onClick={() => setSelectedItem(null)}
+                  className="text-muted-foreground hover:text-foreground shrink-0 p-0.5 rounded-full hover:bg-accent"
+                  title="Deselect task"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
+
             <div className="relative mx-auto mb-6 flex h-60 w-60 items-center justify-center p-2">
               <svg 
                 className="absolute inset-0 h-full w-full -rotate-90 overflow-visible"
@@ -572,59 +603,127 @@ function FocusPage() {
           </CardContent>
         </Card>
 
-        {/* TASKS */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target />
-              Tasks Queue
-            </CardTitle>
+        {/* COMPACT TASK SELECTOR */}
+        <Card className="lg:col-span-6 xl:col-span-5 flex flex-col">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between gap-2">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Target className="h-4 w-4 text-emerald-500" />
+                Focus Task
+              </CardTitle>
+              {selectedItem && (
+                <button
+                  onClick={() => setSelectedItem(null)}
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Clear Selection
+                </button>
+              )}
+            </div>
+
+            {/* Search Input & Plan Filter Bar */}
+            <div className="mt-2 flex flex-col sm:flex-row gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Search task or plan..."
+                  value={taskSearch}
+                  onChange={(e) => setTaskSearch(e.target.value)}
+                  className="pl-8 pr-7 h-8 text-xs bg-accent/40"
+                />
+                {taskSearch && (
+                  <button
+                    onClick={() => setTaskSearch("")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
+
+              {/* Plan Filter Dropdown */}
+              {plans.length > 0 && (
+                <select
+                  value={taskPlanFilter}
+                  onChange={(e) => setTaskPlanFilter(e.target.value)}
+                  className="h-8 rounded-lg border border-border bg-card px-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary shrink-0"
+                >
+                  <option value="ALL">All Plans</option>
+                  {plans.map((p) => (
+                    <option key={p._id} value={p._id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
           </CardHeader>
 
-          <CardContent>
-            {items.length === 0 ? (
-              <div className="flex flex-col items-center py-12 text-center">
-                <CheckCircle2 className="h-16 w-16 text-muted-foreground/40" />
-                <p className="mt-4 font-medium text-foreground">All caught up</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  No pending tasks
+          <CardContent className="pt-0">
+            {filteredItems.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <CheckCircle2 className="h-10 w-10 text-muted-foreground/30 mb-2" />
+                <p className="text-xs font-medium text-foreground">
+                  {taskSearch.trim() || taskPlanFilter !== "ALL" ? "No matching tasks found" : "No pending tasks"}
+                </p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {taskSearch.trim() ? "Try searching for a different keyword" : "You can still run focus sessions freely"}
                 </p>
               </div>
             ) : (
-              <div className="max-h-[500px] space-y-2 overflow-y-auto">
-                {items.map((item) => (
-                  <div
-                    key={item._id}
-                    onClick={() => setSelectedItem(item)}
-                    className={cn(
-                      "group flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors",
-                      selectedItem?._id === item._id
-                        ? "bg-accent border-border"
-                        : "border-border hover:bg-accent/50",
-                    )}
-                  >
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleCompleteItem(item)
-                      }}
+              <div className="max-h-72 space-y-1.5 overflow-y-auto pr-1">
+                {filteredItems.map((item) => {
+                  const isSelected = selectedItem?._id === item._id
+                  return (
+                    <div
+                      key={item._id}
+                      onClick={() => setSelectedItem(isSelected ? null : item)}
+                      className={cn(
+                        "group flex cursor-pointer items-center gap-2.5 rounded-lg border p-2 text-xs transition-colors",
+                        isSelected
+                          ? "bg-primary/10 border-primary text-foreground font-medium shadow-xs"
+                          : "border-border hover:bg-accent/50 text-foreground"
+                      )}
                     >
-                      <Circle className="h-5 w-5 text-muted-foreground hover:text-primary" />
-                    </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleCompleteItem(item)
+                        }}
+                        className="shrink-0 p-0.5"
+                        title="Mark task completed"
+                      >
+                        <Circle className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
+                      </button>
 
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-medium text-foreground">{item.title}</p>
-                      <p className="text-sm text-muted-foreground">{item.planName}</p>
-                    </div>
-
-                    {item.plannedDuration > 0 && (
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <Clock className="h-4 w-4" />
-                        {formatDuration(item.plannedDuration)}
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate">{item.title}</p>
+                        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                          <span
+                            className="h-1.5 w-1.5 rounded-full shrink-0"
+                            style={{ backgroundColor: item.planColor || "#10b981" }}
+                          />
+                          <span className="truncate">{item.planName}</span>
+                        </div>
                       </div>
-                    )}
-                  </div>
-                ))}
+
+                      {item.plannedDuration > 0 && (
+                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground shrink-0">
+                          <Clock className="h-3 w-3" />
+                          {formatDuration(item.plannedDuration)}
+                        </div>
+                      )}
+
+                      <span className={cn(
+                        "text-[10px] font-semibold px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0 transition-opacity",
+                        isSelected ? "bg-primary text-primary-foreground opacity-100" : "opacity-0 group-hover:opacity-100 text-muted-foreground bg-accent"
+                      )}>
+                        {isSelected ? "Active" : "Select"}
+                      </span>
+                    </div>
+                  )
+                })}
               </div>
             )}
           </CardContent>

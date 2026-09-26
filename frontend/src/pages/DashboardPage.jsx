@@ -38,6 +38,15 @@ function DashboardPage() {
       try {
         setError(null)
         setLoading(true)
+        setRecentPlans([])
+        setAllPlans([])
+        setWorkspaces([])
+        setStats({
+          totalPlans: 0,
+          completedTasks: 0,
+          inProgressTasks: 0,
+          totalTime: 0,
+        })
         
         // Fetch data in parallel
         const [workspacesRes, plansRes] = await Promise.allSettled([

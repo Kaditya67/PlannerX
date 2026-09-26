@@ -16,6 +16,8 @@ import {
   Sliders,
   Search,
   X,
+  Maximize2,
+  Minimize2,
 } from "lucide-react"
 
 import Button from "../components/ui/Button.jsx"
@@ -68,6 +70,18 @@ function FocusPage() {
   const [activeSession, setActiveSession] = useState(null)
   const [taskSearch, setTaskSearch] = useState("")
   const [taskPlanFilter, setTaskPlanFilter] = useState("ALL")
+  const [isZoomed, setIsZoomed] = useState(false)
+
+  // Listen for Escape key to exit zoomed focus mode
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && isZoomed) {
+        setIsZoomed(false)
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [isZoomed])
 
   // Custom timer durations state
   const [durations, setDurations] = useState(getTimerDurations)
@@ -437,16 +451,28 @@ function FocusPage() {
             Stay focused and track your work sessions
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setSettingsOpen(true)}
-          className="gap-2 self-start sm:self-auto text-xs"
-          title="Customize timer and break durations"
-        >
-          <Sliders className="h-3.5 w-3.5" />
-          Customize Durations
-        </Button>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setIsZoomed(true)}
+            className="gap-2 text-xs shadow-sm bg-emerald-600 hover:bg-emerald-700 text-white"
+            title="Expand to Fullscreen Focus Mode (Distraction Free)"
+          >
+            <Maximize2 className="h-3.5 w-3.5" />
+            Zoom Focus
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setSettingsOpen(true)}
+            className="gap-2 text-xs"
+            title="Customize timer and break durations"
+          >
+            <Sliders className="h-3.5 w-3.5" />
+            Customize Durations
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-12 items-start">
@@ -459,7 +485,7 @@ function FocusPage() {
                 {isWorking ? "Focus Time" : "Break Time"}
               </CardTitle>
 
-              <div className="flex gap-1.5">
+              <div className="flex items-center gap-1.5">
                 {[
                   { key: "POMODORO", label: `${Math.round((durations.POMODORO?.work || 1500) / 60)}m` },
                   { key: "DEEP_WORK", label: `${Math.round((durations.DEEP_WORK?.work || 5400) / 60)}m` },
@@ -476,6 +502,15 @@ function FocusPage() {
                     {mode.label}
                   </Button>
                 ))}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-foreground shrink-0 ml-1"
+                  onClick={() => setIsZoomed(true)}
+                  title="Zoom into Fullscreen Timer"
+                >
+                  <Maximize2 className="h-4 w-4" />
+                </Button>
               </div>
             </div>
           </CardHeader>
@@ -729,6 +764,165 @@ function FocusPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Fullscreen Distraction-Free Zoomed Focus Overlay */}
+      {isZoomed && (
+        <div className="fixed inset-0 z-50 flex flex-col justify-between bg-background/95 backdrop-blur-md p-6 sm:p-10 select-none animate-in fade-in duration-200">
+          {/* Top Bar with Modes & Exit */}
+          <div className="flex items-center justify-between max-w-4xl mx-auto w-full">
+            <div className="flex items-center gap-2">
+              <div className={cn(
+                "flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider",
+                isWorking ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/30" : "bg-amber-500/10 text-amber-500 border border-amber-500/30"
+              )}>
+                {isWorking ? <Zap className="h-3.5 w-3.5" /> : <Coffee className="h-3.5 w-3.5" />}
+                {isWorking ? "Deep Focus Time" : "Recharge Break"}
+              </div>
+
+              {selectedItem && (
+                <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-accent/60 border border-border text-xs">
+                  <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: selectedItem.planColor || "#10b981" }} />
+                  <span className="font-medium text-foreground truncate max-w-[200px]">{selectedItem.title}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="flex gap-1.5">
+                {[
+                  { key: "POMODORO", label: `${Math.round((durations.POMODORO?.work || 1500) / 60)}m` },
+                  { key: "DEEP_WORK", label: `${Math.round((durations.DEEP_WORK?.work || 5400) / 60)}m` },
+                  { key: "SHORT", label: `${Math.round((durations.SHORT?.work || 900) / 60)}m` },
+                ].map((mode) => (
+                  <Button
+                    key={mode.key}
+                    size="sm"
+                    variant={focusMode === mode.key ? "primary" : "outline"}
+                    onClick={() => changeFocusMode(mode.key)}
+                    disabled={isRunning}
+                    className="h-8 px-2.5 text-xs"
+                  >
+                    {mode.label}
+                  </Button>
+                ))}
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 h-8 text-xs border-border hover:bg-accent ml-2"
+                onClick={() => setIsZoomed(false)}
+                title="Exit Fullscreen (Esc)"
+              >
+                <Minimize2 className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Exit</span>
+              </Button>
+            </div>
+          </div>
+
+          {/* Centered Giant Timer Dial */}
+          <div className="flex flex-col items-center justify-center my-auto">
+            {/* Active task title if selected */}
+            {selectedItem && (
+              <div className="mb-4 text-center">
+                <span className="text-xs uppercase tracking-widest font-semibold text-muted-foreground">{selectedItem.planName}</span>
+                <h2 className="text-lg sm:text-xl font-bold text-foreground mt-0.5">{selectedItem.title}</h2>
+              </div>
+            )}
+
+            <div className="relative flex h-72 w-72 sm:h-96 sm:w-96 items-center justify-center p-4">
+              <svg 
+                className="absolute inset-0 h-full w-full -rotate-90 overflow-visible"
+                viewBox="0 0 256 256"
+              >
+                <circle
+                  cx="128"
+                  cy="128"
+                  r="116"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="6"
+                  className="text-muted/30"
+                />
+                <circle
+                  cx="128"
+                  cy="128"
+                  r="116"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                  strokeDasharray={2 * Math.PI * 116}
+                  strokeDashoffset={2 * Math.PI * 116 * (1 - progress / 100)}
+                  className="text-primary transition-all duration-1000"
+                />
+              </svg>
+
+              <div className="text-center z-10">
+                <p className="text-6xl sm:text-7xl md:text-8xl font-black tracking-tight text-foreground font-mono">
+                  {formatTime(timeLeft)}
+                </p>
+                <p className="mt-2 text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-widest">
+                  {isWorking ? "Stay Locked In" : "Rest & Recharge"}
+                </p>
+              </div>
+            </div>
+
+            {/* Giant Action Controls */}
+            <div className="flex items-center justify-center gap-6 mt-6 sm:mt-10">
+              {/* Reset */}
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-12 w-12 rounded-full border-border text-muted-foreground hover:text-foreground hover:bg-accent transition-all active:scale-95 disabled:opacity-40"
+                onClick={stopTimer}
+                disabled={timeLeft === (isWorking ? durations[focusMode]?.work : durations[focusMode]?.break) && !isRunning}
+                title="Reset Timer"
+              >
+                <RotateCcw className="h-5 w-5" />
+              </Button>
+
+              {/* Play / Pause */}
+              {!isRunning ? (
+                <Button 
+                  size="icon" 
+                  className="h-16 w-16 rounded-full shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground transition-all hover:scale-105 active:scale-95" 
+                  onClick={startTimer}
+                  title="Start / Resume Focus"
+                >
+                  <Play className="h-7 w-7 fill-current ml-1" />
+                </Button>
+              ) : (
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="h-16 w-16 rounded-full border-amber-500/50 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/20 shadow-md transition-all hover:scale-105 active:scale-95"
+                  onClick={pauseTimer}
+                  title="Pause Timer"
+                >
+                  <Pause className="h-7 w-7 fill-current" />
+                </Button>
+              )}
+
+              {/* Skip */}
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-12 w-12 rounded-full border-border text-muted-foreground hover:text-foreground hover:bg-accent transition-all active:scale-95"
+                onClick={skipToNext}
+                title={isWorking ? "Skip to Break" : "Skip to Work"}
+              >
+                <SkipForward className="h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Bottom Hint */}
+          <div className="text-center text-xs text-muted-foreground/60 pb-2">
+            Press <kbd className="px-1.5 py-0.5 rounded bg-muted font-mono text-[11px] text-foreground">Esc</kbd> anytime to exit zoom focus
+          </div>
+        </div>
+      )}
 
       {/* Quick Custom Timer Durations Modal */}
       <Modal

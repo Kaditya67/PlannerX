@@ -14,4 +14,8 @@ export const planAPI = {
   getStats: (id) => apiClient.get(`/plans/${id}/stats`),
 
   importStructure: (id, sections) => apiClient.post(`/plans/${id}/import`, { sections }),
+
+  getTemplate: (id) => apiClient.get(`/plans/${id}/template`),
+
+  cloneFromTemplate: (data) => apiClient.post("/plans/clone-template", data),
 }

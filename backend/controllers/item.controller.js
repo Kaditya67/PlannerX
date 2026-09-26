@@ -2,6 +2,7 @@ import asyncHandler from "express-async-handler"
 import Item from "../models/item.model.js"
 import Section from "../models/section.model.js"
 import Plan from "../models/plan.model.js"
+import Workspace from "../models/workspace.model.js"
 import connectDB from "../config/db.js"  
 
 // @desc    Get items
@@ -12,7 +13,31 @@ export const getItems = asyncHandler(async (req, res) => {
   const { plan, section, status, priority } = req.query
 
   const query = { isDeleted: false }
-  if (plan) query.plan = plan
+
+  if (plan) {
+    query.plan = plan
+  } else {
+    // Find all workspaces accessible to this user
+    const userWorkspaces = await Workspace.find({
+      $or: [{ owner: req.user._id }, { "members.user": req.user._id }],
+      isDeleted: false,
+    }).select("_id")
+    const workspaceIds = userWorkspaces.map((w) => w._id)
+
+    // Find all plans accessible to this user
+    const userPlans = await Plan.find({
+      $or: [
+        { workspace: { $in: workspaceIds } },
+        { createdBy: req.user._id },
+        { collaborators: req.user._id },
+      ],
+      isDeleted: false,
+    }).select("_id")
+    const planIds = userPlans.map((p) => p._id)
+
+    query.plan = { $in: planIds }
+  }
+
   if (section) query.section = section
   if (status) query.status = status
   if (priority) query.priority = priority

@@ -9,10 +9,12 @@ import {
   Bookmark,
   RotateCcw,
   Download,
+  Share2,
+  Copy,
   MoreVertical,
 } from "lucide-react"
 
-function PlanHeader({ plan, onEditPlan, onAddSection, onDownload, onSmartEdit, onUpdateStatus }) {
+function PlanHeader({ plan, onEditPlan, onAddSection, onDownload, onShareTemplate, onCopyTemplate, onSmartEdit, onUpdateStatus }) {
   const status = plan?.status || "active"
 
   return (
@@ -44,7 +46,7 @@ function PlanHeader({ plan, onEditPlan, onAddSection, onDownload, onSmartEdit, o
 
         <Dropdown
           align="right"
-          className="w-48"
+          className="w-56"
           trigger={
             <Button variant="outline" size="sm" className="px-2.5" title="Plan options">
               <MoreVertical className="h-4 w-4 text-muted-foreground" />
@@ -58,6 +60,14 @@ function PlanHeader({ plan, onEditPlan, onAddSection, onDownload, onSmartEdit, o
           <DropdownItem onClick={onSmartEdit}>
             <FileText className="mr-2 h-4 w-4 text-muted-foreground" />
             Smart Edit
+          </DropdownItem>
+          <DropdownItem onClick={onShareTemplate}>
+            <Share2 className="mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            Share Fresh Template
+          </DropdownItem>
+          <DropdownItem onClick={onCopyTemplate}>
+            <Copy className="mr-2 h-4 w-4 text-muted-foreground" />
+            Copy Template JSON
           </DropdownItem>
           <DropdownItem onClick={onDownload}>
             <Download className="mr-2 h-4 w-4 text-muted-foreground" />

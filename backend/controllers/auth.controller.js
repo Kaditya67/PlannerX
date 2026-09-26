@@ -1,6 +1,7 @@
 import asyncHandler from "express-async-handler"
 import connectDB from "../config/db.js"  // Adjust path from api folder
 import User from "../models/user.model.js"  // Adjust path from api folder
+import Workspace from "../models/workspace.model.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 
 // Helper to send token response
@@ -53,6 +54,16 @@ export const register = asyncHandler(async (req, res) => {
     name,
     email: email.toLowerCase(),
     password,
+  })
+
+  // Create default personal workspace for the new user
+  await Workspace.create({
+    name: "Personal",
+    description: "Default personal workspace",
+    color: "#10B981",
+    icon: "folder",
+    owner: user._id,
+    members: [],
   })
 
   sendTokenResponse(user, 201, res)

@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useToast } from "../context/ToastContext.jsx"
 import { planAPI } from "../api/index.js"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Copy, Check, Download, Share2 } from "lucide-react"
 import Button from "../components/ui/Button.jsx"
 import { Card, CardContent } from "../components/ui/Card.jsx"
 import LoadingSpinner from "../components/ui/LoadingSpinner.jsx"
@@ -100,6 +100,47 @@ function PlanPage() {
     }
   }
 
+  const [shareModalOpen, setShareModalOpen] = useState(false)
+  const [templateData, setTemplateData] = useState(null)
+  const [templateLoading, setTemplateLoading] = useState(false)
+
+  const handleShareTemplate = async () => {
+    try {
+      setTemplateLoading(true)
+      const res = await planAPI.getTemplate(planId)
+      const cleanTemplate = res.data?.data || res.data
+      setTemplateData(cleanTemplate)
+      setShareModalOpen(true)
+    } catch (error) {
+      toast.error(error.message || "Failed to generate template")
+    } finally {
+      setTemplateLoading(false)
+    }
+  }
+
+  const handleCopyTemplate = async () => {
+    try {
+      const res = await planAPI.getTemplate(planId)
+      const cleanTemplate = res.data?.data || res.data
+      await navigator.clipboard.writeText(JSON.stringify(cleanTemplate, null, 2))
+      toast.success("Fresh template JSON copied to clipboard!")
+    } catch (error) {
+      toast.error("Failed to copy template JSON")
+    }
+  }
+
+  const handleDownloadTemplate = () => {
+    if (!templateData) return
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(templateData, null, 2))
+    const downloadAnchorNode = document.createElement('a')
+    downloadAnchorNode.setAttribute("href", dataStr)
+    downloadAnchorNode.setAttribute("download", `${(templateData.name || 'template').replace(/\s+/g, '_')}.json`)
+    document.body.appendChild(downloadAnchorNode)
+    downloadAnchorNode.click()
+    downloadAnchorNode.remove()
+    toast.success("Fresh template file exported!")
+  }
+
   const handleDownload = () => {
     if (!plan) return
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ plan, sections, items }, null, 2))
@@ -157,6 +198,8 @@ function PlanPage() {
           onEditPlan={openPlanModal}
           onAddSection={() => openSectionModal()}
           onDownload={handleDownload}
+          onShareTemplate={handleShareTemplate}
+          onCopyTemplate={handleCopyTemplate}
           onSmartEdit={() => setSmartEditorOpen(true)}
           onUpdateStatus={handleUpdateStatus}
         />
@@ -293,6 +336,76 @@ function PlanPage() {
             </Button>
           </div>
         </form>
+      </Modal>
+
+      {/* Share Clean Template Modal */}
+      <Modal
+        isOpen={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        title="Share Clean Template"
+        size="lg"
+      >
+        <div className="space-y-4">
+          <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 p-4">
+            <h4 className="text-sm font-semibold text-emerald-900 dark:text-emerald-300 flex items-center gap-2">
+              <Share2 className="h-4 w-4" />
+              Pristine Template Guarantee
+            </h4>
+            <p className="mt-1 text-xs text-emerald-800 dark:text-emerald-400 leading-relaxed">
+              When you share this plan as a template, all completion checkboxes, time tracking logs, and personal assignee states are completely reset. Whoever imports this template gets a brand-new uncompleted roadmap ready to start from scratch.
+            </p>
+          </div>
+
+          {templateData && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>{templateData.sections?.length || 0} Sections • {templateData.items?.length || 0} Tasks (all reset to uncompleted)</span>
+                <span className="font-medium text-foreground">{templateData.name}</span>
+              </div>
+
+              <div className="relative">
+                <textarea
+                  readOnly
+                  value={JSON.stringify(templateData, null, 2)}
+                  className="h-44 w-full rounded-md border border-input bg-muted/40 p-3 font-mono text-xs leading-tight text-foreground focus:outline-none resize-none"
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadTemplate}
+                  className="gap-1.5"
+                >
+                  <Download className="h-4 w-4" />
+                  Download Template JSON
+                </Button>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      navigator.clipboard.writeText(JSON.stringify(templateData, null, 2))
+                      toast.success("Template JSON copied!")
+                    }}
+                    className="gap-1.5"
+                  >
+                    <Copy className="h-4 w-4" />
+                    Copy JSON
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => setShareModalOpen(false)}
+                  >
+                    Done
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </Modal>
     </div>
   )

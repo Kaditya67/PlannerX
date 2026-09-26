@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { workspaceAPI, planAPI } from "../api/index.js"
 import { useToast } from "../context/ToastContext.jsx"
-import { Plus, ArrowLeft, Folder, BookOpen, Calendar, Sun, Layers, MoreVertical, Pencil, Trash2, Archive, Bookmark, RotateCcw } from "lucide-react"
+import { Plus, ArrowLeft, Folder, BookOpen, Calendar, Sun, Layers, MoreVertical, Pencil, Trash2, Archive, Bookmark, RotateCcw, Share2, FileUp, Copy } from "lucide-react"
 import Button from "../components/ui/Button.jsx"
 import Input from "../components/ui/Input.jsx"
 import { Card, CardContent } from "../components/ui/Card.jsx"
@@ -30,6 +30,9 @@ function WorkspacePage() {
   const [plans, setPlans] = useState([])
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
+  const [importModalOpen, setImportModalOpen] = useState(false)
+  const [importJSONText, setImportJSONText] = useState("")
+  const [importSubmitting, setImportSubmitting] = useState(false)
   const [statusFilter, setStatusFilter] = useState("active") // "active" | "stashed" | "archived" | "all"
   const [formData, setFormData] = useState({
     name: "",
@@ -38,6 +41,37 @@ function WorkspacePage() {
     color: "",
   })
   const [submitting, setSubmitting] = useState(false)
+
+  const handleImportTemplate = async (e) => {
+    e.preventDefault()
+    if (!importJSONText.trim()) {
+      toast.error("Please paste template JSON")
+      return
+    }
+
+    try {
+      setImportSubmitting(true)
+      let parsed = JSON.parse(importJSONText.trim())
+      // Support both raw template object and API wrapper format
+      if (parsed.data) parsed = parsed.data
+
+      const { data } = await planAPI.cloneFromTemplate({
+        workspaceId,
+        templateData: parsed,
+      })
+
+      const newPlan = data.data || data
+      setPlans((prev) => [newPlan, ...prev])
+      setImportModalOpen(false)
+      setImportJSONText("")
+      toast.success("Fresh template imported as new plan!")
+      navigate(`/plans/${newPlan._id}`)
+    } catch (err) {
+      toast.error(err.message || "Invalid template JSON")
+    } finally {
+      setImportSubmitting(false)
+    }
+  }
 
   useEffect(() => {
     fetchData()
@@ -158,10 +192,16 @@ function WorkspacePage() {
               )}
             </div>
           </div>
-          <Button onClick={openCreateModal}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Plan
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setImportModalOpen(true)}>
+              <FileUp className="mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              Import Template
+            </Button>
+            <Button onClick={openCreateModal}>
+              <Plus className="mr-2 h-4 w-4" />
+              New Plan
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -259,6 +299,19 @@ function WorkspacePage() {
                         <DropdownItem onClick={() => navigate(`/plans/${plan._id}`)}>
                           <Pencil className="mr-2 h-4 w-4" />
                           Edit
+                        </DropdownItem>
+                        <DropdownItem onClick={async () => {
+                          try {
+                            const res = await planAPI.getTemplate(plan._id)
+                            const cleanTemplate = res.data?.data || res.data
+                            await navigator.clipboard.writeText(JSON.stringify(cleanTemplate, null, 2))
+                            toast.success("Fresh template JSON copied to clipboard!")
+                          } catch {
+                            toast.error("Failed to copy template JSON")
+                          }
+                        }}>
+                          <Share2 className="mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                          Share Template
                         </DropdownItem>
                         
                         <DropdownSeparator />
@@ -379,6 +432,54 @@ function WorkspacePage() {
             </Button>
             <Button type="submit" loading={submitting}>
               Create Plan
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Import Clean Template Modal */}
+      <Modal
+        isOpen={importModalOpen}
+        onClose={() => {
+          setImportModalOpen(false)
+          setImportJSONText("")
+        }}
+        title="Import Plan From Clean Template"
+        size="lg"
+      >
+        <form onSubmit={handleImportTemplate} className="space-y-4">
+          <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 p-4">
+            <p className="text-xs text-emerald-800 dark:text-emerald-400 leading-relaxed">
+              Paste a shared template JSON below to import it into <strong>{workspace?.name}</strong>. It will be created with all tasks in pristine, uncompleted state ready for you to track.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">Template JSON *</label>
+            <textarea
+              value={importJSONText}
+              onChange={(e) => setImportJSONText(e.target.value)}
+              placeholder="Paste template JSON here..."
+              rows={8}
+              required
+              className="w-full rounded-md border border-input bg-muted/40 p-3 font-mono text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setImportModalOpen(false)
+                setImportJSONText("")
+              }}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" loading={importSubmitting} className="gap-1.5">
+              <FileUp className="h-4 w-4" />
+              Import Plan
             </Button>
           </div>
         </form>

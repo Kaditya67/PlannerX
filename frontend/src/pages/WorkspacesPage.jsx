@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
+import { useAuth } from "../context/AuthContext.jsx"
 import { workspaceAPI, planAPI } from "../api/index.js"
 import { useToast } from "../context/ToastContext.jsx"
 import { Plus, Folder, MoreVertical, Pencil, Trash2, Users, Clock, CheckCircle2, TrendingUp } from "lucide-react"
@@ -14,6 +15,7 @@ import { Dropdown, DropdownItem, DropdownSeparator } from "../components/ui/Drop
 import { generateColor, formatDuration } from "../utils/helpers.js"
 
 function WorkspacesPage() {
+  const { user } = useAuth()
   const navigate = useNavigate()
   const { toast } = useToast()
   const [workspaces, setWorkspaces] = useState([])
@@ -26,7 +28,7 @@ function WorkspacesPage() {
 
   useEffect(() => {
     fetchData()
-  }, [])
+  }, [user?._id])
 
   const fetchData = async () => {
     try {

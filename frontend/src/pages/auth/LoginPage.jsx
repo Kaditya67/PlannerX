@@ -10,7 +10,7 @@ function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
-  const { login } = useAuth()
+  const { login, register } = useAuth()
   const { toast } = useToast()
   const navigate = useNavigate()
   const location = useLocation()
@@ -118,28 +118,16 @@ function LoginPage() {
                 try {
                   await login({ email: demoEmail, password: demoPassword })
                   toast.success("Logged in as Demo User!")
-                  navigate(from, { replace: true })
+                  window.location.href = from
                 } catch (err) {
-                  // If user doesn't exist yet, auto-register demo user
+                  // If user doesn't exist yet, register demo user
                   try {
-                    const { register } = (await import("../../context/AuthContext.jsx"))
-                    // Use register via auth context
-                    const res = await fetch("/api/auth/register", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ name: "Demo User", email: demoEmail, password: demoPassword }),
-                    })
-                    const data = await res.json()
-                    if (data?.data?.token) {
-                      localStorage.setItem("token", data.data.token)
-                      localStorage.setItem("user", JSON.stringify(data.data.user))
-                      window.location.href = from
-                      return
-                    }
-                  } catch (e) {
-                    // Ignore fallback
+                    await register({ name: "Demo User", email: demoEmail, password: demoPassword })
+                    toast.success("Demo account created and logged in!")
+                    window.location.href = from
+                  } catch (regErr) {
+                    toast.error(regErr.message || err.message || "Failed to log in with demo account")
                   }
-                  toast.error(err.message || "Failed to log in with demo account")
                 } finally {
                   setLoading(false)
                 }

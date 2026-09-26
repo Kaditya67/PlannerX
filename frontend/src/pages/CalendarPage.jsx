@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react"
+import { useAuth } from "../context/AuthContext.jsx"
 import { sessionAPI } from "../api/index.js"
 import { useToast } from "../context/ToastContext.jsx"
 import { ChevronLeft, ChevronRight, Clock, Play, Square, Calendar as CalendarIcon, CheckCircle2 } from "lucide-react"
@@ -17,6 +18,7 @@ const MONTHS = [
 ]
 
 function CalendarPage() {
+  const { user } = useAuth()
   const { toast } = useToast()
 
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -26,7 +28,7 @@ function CalendarPage() {
 
   useEffect(() => {
     fetchSessions()
-  }, [currentDate])
+  }, [currentDate, user?._id])
 
   const fetchSessions = async () => {
     setLoading(true)

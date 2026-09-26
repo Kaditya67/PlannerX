@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react"
+import { useAuth } from "../context/AuthContext.jsx"
 import { planAPI, itemAPI, sessionAPI } from "../api/index.js"
 import { useToast } from "../context/ToastContext.jsx"
 import {
@@ -60,6 +61,7 @@ const getTimerDurations = () => {
 }
 
 function FocusPage() {
+  const { user } = useAuth()
   const { toast } = useToast()
 
   const [plans, setPlans] = useState([])
@@ -194,6 +196,8 @@ function FocusPage() {
      Initial load & storage listeners
   --------------------------------------------- */
   useEffect(() => {
+    setSelectedItem(null)
+    setActiveSession(null)
     fetchData()
 
     const handleStorageChange = () => {
@@ -202,7 +206,7 @@ function FocusPage() {
     }
     window.addEventListener("storage", handleStorageChange)
     return () => window.removeEventListener("storage", handleStorageChange)
-  }, [])
+  }, [user?._id])
 
   // If timer was running before refresh, auto-resume it seamlessly
   useEffect(() => {

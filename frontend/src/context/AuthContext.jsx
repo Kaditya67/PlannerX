@@ -48,8 +48,11 @@ export function AuthProvider({ children }) {
     } catch (error) {
       // Continue with logout even if API fails
     }
+    // Clear auth credentials and any user-specific cached local state
     localStorage.removeItem("token")
     localStorage.removeItem("user")
+    localStorage.removeItem("planner_focus_timer_state")
+    localStorage.removeItem("planner_custom_timer_durations")
     setUser(null)
   }
 

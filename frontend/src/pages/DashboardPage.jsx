@@ -99,7 +99,7 @@ function DashboardPage() {
     }
 
     fetchData()
-  }, [])
+  }, [user?._id])
 
   // Handle empty states
   const hasWorkspaces = workspaces.length > 0

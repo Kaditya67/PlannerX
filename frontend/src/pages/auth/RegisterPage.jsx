@@ -34,7 +34,7 @@ function RegisterPage() {
     try {
       await register({ name, email, password })
       toast.success("Account created successfully!")
-      navigate("/dashboard")
+      window.location.href = "/dashboard"
     } catch (error) {
       toast.error(error.message)
     } finally {

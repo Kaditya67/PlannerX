@@ -67,7 +67,7 @@ function MainLayout() {
 
   const handleLogout = async () => {
     await logout()
-    navigate("/login")
+    window.location.href = "/login"
   }
 
   // Get active nav item for mobile header title

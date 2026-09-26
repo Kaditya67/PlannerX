@@ -24,16 +24,20 @@ export const getItems = asyncHandler(async (req, res) => {
     }).select("_id")
     const workspaceIds = userWorkspaces.map((w) => w._id)
 
-    // Find all plans accessible to this user
+    if (workspaceIds.length === 0) {
+      return res.status(200).json({ success: true, count: 0, data: [] })
+    }
+
+    // Find all plans accessible to this user within their accessible workspaces
     const userPlans = await Plan.find({
-      $or: [
-        { workspace: { $in: workspaceIds } },
-        { createdBy: req.user._id },
-        { collaborators: req.user._id },
-      ],
+      workspace: { $in: workspaceIds },
       isDeleted: false,
     }).select("_id")
     const planIds = userPlans.map((p) => p._id)
+
+    if (planIds.length === 0) {
+      return res.status(200).json({ success: true, count: 0, data: [] })
+    }
 
     query.plan = { $in: planIds }
   }

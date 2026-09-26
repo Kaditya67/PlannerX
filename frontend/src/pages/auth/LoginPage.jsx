@@ -24,7 +24,7 @@ function LoginPage() {
     try {
       await login({ email, password })
       toast.success("Welcome back!")
-      navigate(from, { replace: true })
+      window.location.href = from
     } catch (error) {
       toast.error(error.message)
     } finally {

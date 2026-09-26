@@ -35,11 +35,11 @@ export const getPlans = asyncHandler(async (req, res) => {
     }).select("_id")
     const workspaceIds = userWorkspaces.map((w) => w._id)
 
-    query.$or = [
-      { workspace: { $in: workspaceIds } },
-      { createdBy: req.user._id },
-      { collaborators: req.user._id },
-    ]
+    if (workspaceIds.length === 0) {
+      return res.status(200).json({ success: true, count: 0, data: [] })
+    }
+
+    query.workspace = { $in: workspaceIds }
   }
 
   if (type) query.type = type
@@ -68,17 +68,20 @@ export const getPlan = asyncHandler(async (req, res) => {
     throw new Error("Plan not found")
   }
 
-  // Check access: must have access to workspace or be creator/collaborator
+  // Check access: must have access to the workspace the plan belongs to
+  const workspaceId = plan.workspace?._id || plan.workspace
+  if (!workspaceId) {
+    res.status(403)
+    throw new Error("Plan is not associated with a valid workspace")
+  }
+
   const ws = await Workspace.findOne({
-    _id: plan.workspace?._id || plan.workspace,
+    _id: workspaceId,
     $or: [{ owner: req.user._id }, { "members.user": req.user._id }],
     isDeleted: false,
   })
 
-  const isCreator = plan.createdBy?._id?.toString() === req.user._id.toString() || plan.createdBy?.toString() === req.user._id.toString()
-  const isCollaborator = plan.collaborators?.some(c => (c._id || c).toString() === req.user._id.toString())
-
-  if (!ws && !isCreator && !isCollaborator) {
+  if (!ws) {
     res.status(403)
     throw new Error("Not authorized to access this plan")
   }

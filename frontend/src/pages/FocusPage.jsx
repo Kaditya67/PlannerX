@@ -114,17 +114,18 @@ function FocusPage() {
 
   const [timeLeft, setTimeLeft] = useState(() => {
     const curDurations = getTimerDurations()
+    const defaultTime = curDurations?.POMODORO?.work || 25 * 60
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY))
-      if (!saved) return curDurations.POMODORO.work
+      if (!saved) return defaultTime
       if (saved.isRunning && saved.lastTick) {
         const elapsed = Math.floor((Date.now() - saved.lastTick) / 1000)
         const remaining = (saved.timeLeft || 0) - elapsed
-        return Math.max(0, remaining)
+        return Number.isFinite(remaining) ? Math.max(0, remaining) : defaultTime
       }
-      return saved.timeLeft !== undefined ? saved.timeLeft : curDurations.POMODORO.work
+      return Number.isFinite(saved.timeLeft) ? Math.max(0, saved.timeLeft) : defaultTime
     } catch {
-      return curDurations.POMODORO.work
+      return defaultTime
     }
   })
 
@@ -253,21 +254,39 @@ function FocusPage() {
 
   const fetchData = async () => {
     try {
-      const { data: plansData } = await planAPI.getAll()
-      setPlans(plansData || [])
+      const [plansRes, itemsRes] = await Promise.allSettled([
+        planAPI.getAll(),
+        itemAPI.getAll()
+      ])
 
-      const pendingItems = []
-      for (const plan of plansData || []) {
-        plan.items?.forEach((item) => {
-          if (item.status !== ITEM_STATUS.COMPLETED) {
-            pendingItems.push({
-              ...item,
-              planName: plan.name,
-              planColor: plan.color,
-            })
-          }
-        })
+      const plansData = plansRes.status === "fulfilled" ? plansRes.value.data || [] : []
+      setPlans(plansData)
+
+      const planMap = {}
+      for (const p of plansData) {
+        planMap[p._id] = { name: p.name, color: p.color }
       }
+
+      let allItems = []
+      if (itemsRes.status === "fulfilled" && Array.isArray(itemsRes.value.data)) {
+        allItems = itemsRes.value.data
+      } else {
+        // Fallback if items were populated in plan objects
+        for (const plan of plansData) {
+          if (Array.isArray(plan.items)) {
+            allItems.push(...plan.items)
+          }
+        }
+      }
+
+      const pendingItems = allItems
+        .filter((item) => item && item.status !== ITEM_STATUS.COMPLETED)
+        .map((item) => ({
+          ...item,
+          planName: planMap[item.plan]?.name || item.planName || "General",
+          planColor: planMap[item.plan]?.color || item.planColor || "#10b981",
+        }))
+
       setItems(pendingItems)
     } catch {
       toast.error("Failed to load focus data")
@@ -377,16 +396,17 @@ function FocusPage() {
   }
 
   const formatTime = (seconds) => {
-    const m = Math.floor(seconds / 60)
-    const s = seconds % 60
+    const validSec = Math.max(0, Number.isFinite(seconds) ? Math.floor(seconds) : 0)
+    const m = Math.floor(validSec / 60)
+    const s = validSec % 60
     return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`
   }
 
-  const curWorkSec = durations[focusMode]?.work || 25 * 60
-  const curBreakSec = durations[focusMode]?.break || 5 * 60
-  const progress = isWorking
-    ? Math.min(100, Math.max(0, ((curWorkSec - timeLeft) / curWorkSec) * 100))
-    : Math.min(100, Math.max(0, ((curBreakSec - timeLeft) / curBreakSec) * 100))
+  const curWorkSec = durations?.[focusMode]?.work || 25 * 60
+  const curBreakSec = durations?.[focusMode]?.break || 5 * 60
+  const totalModeSec = isWorking ? curWorkSec : curBreakSec
+  const rawProgress = totalModeSec > 0 ? ((totalModeSec - timeLeft) / totalModeSec) * 100 : 0
+  const progress = Number.isFinite(rawProgress) ? Math.min(100, Math.max(0, rawProgress)) : 0
 
   if (loading) {
     return (
@@ -494,7 +514,7 @@ function FocusPage() {
                   size="icon"
                   className="h-10 w-10 rounded-full border-border text-muted-foreground hover:text-foreground hover:bg-accent transition-all active:scale-95 disabled:opacity-40"
                   onClick={stopTimer}
-                  disabled={timeLeft === (isWorking ? FOCUS_MODES[focusMode].work : FOCUS_MODES[focusMode].break) && !isRunning}
+                  disabled={timeLeft === (isWorking ? durations[focusMode]?.work : durations[focusMode]?.break) && !isRunning}
                   title="Reset Timer"
                 >
                   <RotateCcw className="h-4 w-4" />
@@ -511,7 +531,7 @@ function FocusPage() {
                     size="icon" 
                     className="h-12 w-12 rounded-full shadow-md bg-primary hover:bg-primary/90 text-primary-foreground transition-all hover:scale-105 active:scale-95" 
                     onClick={startTimer}
-                    title={timeLeft === (isWorking ? FOCUS_MODES[focusMode].work : FOCUS_MODES[focusMode].break) ? "Start Focus" : "Resume"}
+                    title={timeLeft === (isWorking ? durations[focusMode]?.work : durations[focusMode]?.break) ? "Start Focus" : "Resume"}
                   >
                     <Play className="h-5 w-5 fill-current ml-0.5" />
                   </Button>
@@ -528,7 +548,7 @@ function FocusPage() {
                 )}
                 <div className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap rounded bg-popover px-2 py-0.5 text-[11px] font-medium text-popover-foreground shadow border border-border z-20">
                   {!isRunning 
-                    ? (timeLeft === (isWorking ? FOCUS_MODES[focusMode].work : FOCUS_MODES[focusMode].break) ? "Start Focus" : "Resume") 
+                    ? (timeLeft === (isWorking ? durations[focusMode]?.work : durations[focusMode]?.break) ? "Start Focus" : "Resume") 
                     : "Pause Timer"}
                 </div>
               </div>

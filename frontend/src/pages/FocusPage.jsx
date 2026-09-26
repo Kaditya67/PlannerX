@@ -707,7 +707,7 @@ function FocusPage() {
                 </p>
               </div>
             ) : (
-              <div className="max-h-72 space-y-1.5 overflow-y-auto pr-1">
+              <div className="max-h-72 space-y-1.5 overflow-y-auto no-scrollbar">
                 {filteredItems.map((item) => {
                   const isSelected = selectedItem?._id === item._id
                   return (

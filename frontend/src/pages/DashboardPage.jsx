@@ -16,6 +16,7 @@ function DashboardPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [workspaces, setWorkspaces] = useState([])
+  const [allPlans, setAllPlans] = useState([])
   const [recentPlans, setRecentPlans] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -59,14 +60,17 @@ function DashboardPage() {
         // Handle plans response
         if (plansRes.status === 'fulfilled') {
           planData = plansRes.value.data || []
-          // Limit recent plans for performance
-          setRecentPlans(planData.slice(0, 4))
+          setAllPlans(planData)
+          
+          // Exclude stashed and archived plans from active recent list and active stats
+          const activePlans = planData.filter(p => !p.status || p.status === "active")
+          setRecentPlans(activePlans.slice(0, 4))
 
           let completed = 0
           let totalTime = 0
           let inProgressCount = 0
 
-          planData.forEach((plan) => {
+          activePlans.forEach((plan) => {
             completed += plan.completedDuration || 0
             totalTime += plan.totalDuration || 0
             // Check if plan is in progress
@@ -76,7 +80,7 @@ function DashboardPage() {
           })
 
           setStats({
-            totalPlans: planData.length,
+            totalPlans: activePlans.length,
             completedTasks: completed,
             inProgressTasks: inProgressCount,
             totalTime: totalTime,
@@ -174,16 +178,16 @@ function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-6 lg:p-8">
+    <div className="p-4 md:p-6">
       {/* Header */}
-      <header className="mb-8 md:mb-10">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
+      <header className="mb-6">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
           Welcome back, <span className="text-emerald-600 dark:text-emerald-400">{user?.name?.split(" ")[0] || 'User'}!</span>
         </h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-400">
-          Here's an overview of your planning progress
+        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          Overview of your planning progress
           {completionPercentage > 0 && (
-            <span className="ml-2 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+            <span className="ml-2 font-medium text-emerald-600 dark:text-emerald-400">
               • {completionPercentage}% overall completion
             </span>
           )}
@@ -191,22 +195,22 @@ function DashboardPage() {
       </header>
 
       {/* Stats Grid */}
-      <section className="mb-8 md:mb-10">
+      <section className="mb-6">
         <h2 className="sr-only">Performance statistics</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
           {/* Total Plans Card */}
-          <Card className="group transition-all duration-200 hover:shadow-lg dark:hover:shadow-gray-800/50 hover:-translate-y-1">
-            <CardContent className="p-6">
+          <Card className="group transition-all duration-200 hover:shadow-md dark:hover:shadow-gray-800/50 hover:-translate-y-0.5 border border-gray-200 dark:border-gray-800">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Total Plans</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.totalPlans}</p>
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Total Plans</p>
+                  <p className="text-xl font-bold text-gray-900 dark:text-gray-100">{stats.totalPlans}</p>
                 </div>
-                <div className="rounded-full bg-emerald-100 dark:bg-emerald-900/30 p-3 group-hover:bg-emerald-200 dark:group-hover:bg-emerald-800/40 transition-colors">
-                  <Folder className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                <div className="rounded-lg bg-emerald-100 dark:bg-emerald-900/30 p-2.5 group-hover:bg-emerald-200 dark:group-hover:bg-emerald-800/40 transition-colors">
+                  <Folder className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                 </div>
               </div>
-              <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   {recentPlans.length} recent • {stats.inProgressTasks} in progress
                 </p>
@@ -215,40 +219,40 @@ function DashboardPage() {
           </Card>
 
           {/* Completed Tasks Card */}
-          <Card className="group transition-all duration-200 hover:shadow-lg dark:hover:shadow-gray-800/50 hover:-translate-y-1">
-            <CardContent className="p-6">
+          <Card className="group transition-all duration-200 hover:shadow-md dark:hover:shadow-gray-800/50 hover:-translate-y-0.5 border border-gray-200 dark:border-gray-800">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Completed</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{formatDuration(stats.completedTasks)}</p>
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Completed</p>
+                  <p className="text-xl font-bold text-gray-900 dark:text-gray-100">{formatDuration(stats.completedTasks)}</p>
                 </div>
-                <div className="rounded-full bg-green-100 dark:bg-green-900/30 p-3 group-hover:bg-green-200 dark:group-hover:bg-green-800/40 transition-colors">
-                  <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
+                <div className="rounded-lg bg-green-100 dark:bg-green-900/30 p-2.5 group-hover:bg-green-200 dark:group-hover:bg-green-800/40 transition-colors">
+                  <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
                 </div>
               </div>
-              <div className="mt-4">
-                <div className="flex items-center justify-between text-sm mb-1">
+              <div className="mt-3">
+                <div className="flex items-center justify-between text-xs mb-1">
                   <span className="text-gray-500 dark:text-gray-400">Progress</span>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">{completionPercentage}%</span>
+                  <span className="font-semibold text-gray-700 dark:text-gray-300">{completionPercentage}%</span>
                 </div>
-                <Progress value={completionPercentage} className="h-2" />
+                <Progress value={completionPercentage} className="h-1.5" />
               </div>
             </CardContent>
           </Card>
 
           {/* Total Time Card */}
-          <Card className="group transition-all duration-200 hover:shadow-lg dark:hover:shadow-gray-800/50 hover:-translate-y-1">
-            <CardContent className="p-6">
+          <Card className="group transition-all duration-200 hover:shadow-md dark:hover:shadow-gray-800/50 hover:-translate-y-0.5 border border-gray-200 dark:border-gray-800">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Total Time</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{formatDuration(stats.totalTime)}</p>
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Total Time</p>
+                  <p className="text-xl font-bold text-gray-900 dark:text-gray-100">{formatDuration(stats.totalTime)}</p>
                 </div>
-                <div className="rounded-full bg-amber-100 dark:bg-amber-900/30 p-3 group-hover:bg-amber-200 dark:group-hover:bg-amber-800/40 transition-colors">
-                  <Clock className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                <div className="rounded-lg bg-amber-100 dark:bg-amber-900/30 p-2.5 group-hover:bg-amber-200 dark:group-hover:bg-amber-800/40 transition-colors">
+                  <Clock className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                 </div>
               </div>
-              <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   Avg: {stats.totalPlans > 0 ? formatDuration(stats.totalTime / stats.totalPlans) : '0h'}/plan
                 </p>
@@ -257,19 +261,19 @@ function DashboardPage() {
           </Card>
 
           {/* Workspaces Card */}
-          <Card className="group transition-all duration-200 hover:shadow-lg dark:hover:shadow-gray-800/50 hover:-translate-y-1">
-            <CardContent className="p-6">
+          <Card className="group transition-all duration-200 hover:shadow-md dark:hover:shadow-gray-800/50 hover:-translate-y-0.5 border border-gray-200 dark:border-gray-800">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Workspaces</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{workspaces.length}</p>
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Workspaces</p>
+                  <p className="text-xl font-bold text-gray-900 dark:text-gray-100">{workspaces.length}</p>
                 </div>
-                <div className="rounded-full bg-blue-100 dark:bg-blue-900/30 p-3 group-hover:bg-blue-200 dark:group-hover:bg-blue-800/40 transition-colors">
-                  <TrendingUp className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                <div className="rounded-lg bg-blue-100 dark:bg-blue-900/30 p-2.5 group-hover:bg-blue-200 dark:group-hover:bg-blue-800/40 transition-colors">
+                  <TrendingUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 </div>
               </div>
-              <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                   {workspaces.slice(0, 2).map(w => w.name).join(', ')}
                   {workspaces.length > 2 && ` +${workspaces.length - 2} more`}
                 </p>
@@ -402,45 +406,68 @@ function DashboardPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                {workspaces.slice(0, 4).map((workspace) => (
-                  <div
-                    key={workspace._id}
-                    onClick={() => navigate(`/workspaces/${workspace._id}`)}
-                    className="group flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-800 
-                               hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:border-gray-300 dark:hover:border-gray-700 
-                               cursor-pointer transition-all duration-150 active:scale-[0.99]"
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => e.key === 'Enter' && navigate(`/workspaces/${workspace._id}`)}
-                  >
+                {workspaces.slice(0, 4).map((workspace) => {
+                  const wsPlans = allPlans.filter(
+                    (p) => (p.workspace?._id || p.workspace) === workspace._id
+                  )
+                  const wsActivePlans = wsPlans.filter(
+                    (p) => !p.status || p.status === "active"
+                  )
+                  let wsTotal = 0
+                  let wsCompleted = 0
+                  wsActivePlans.forEach((p) => {
+                    wsTotal += p.totalDuration || 0
+                    wsCompleted += p.completedDuration || 0
+                  })
+                  const wsProgress =
+                    wsTotal > 0
+                      ? Math.round((wsCompleted / wsTotal) * 100)
+                      : wsActivePlans.length > 0 && wsCompleted > 0
+                      ? 100
+                      : 0
+
+                  return (
                     <div
-                      className="h-10 w-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: workspace.color || "#10B981" }}
+                      key={workspace._id}
+                      onClick={() => navigate(`/workspaces/${workspace._id}`)}
+                      className="group flex flex-col gap-2 p-3.5 rounded-lg border border-gray-200 dark:border-gray-800 
+                                 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:border-gray-300 dark:hover:border-gray-700 
+                                 cursor-pointer transition-all duration-150 active:scale-[0.99]"
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => e.key === 'Enter' && navigate(`/workspaces/${workspace._id}`)}
                     >
-                      <Folder className="h-5 w-5 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-gray-900 dark:text-gray-100 truncate group-hover:text-emerald-700 dark:group-hover:text-emerald-300">
-                        {workspace.name}
-                      </h3>
-                      <div className="flex items-center gap-3 mt-0.5">
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {workspace.plansCount || 0} {workspace.plansCount === 1 ? 'plan' : 'plans'}
-                        </span>
-                        <span className="text-gray-300 dark:text-gray-600">•</span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {workspace.members?.length || 0} {workspace.members?.length === 1 ? 'member' : 'members'}
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="h-10 w-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                          style={{ backgroundColor: workspace.color || "#10B981" }}
+                        >
+                          <Folder className="h-5 w-5 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-gray-900 dark:text-gray-100 truncate group-hover:text-emerald-700 dark:group-hover:text-emerald-300">
+                            {workspace.name}
+                          </h3>
+                          <div className="flex items-center gap-3 mt-0.5">
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              {wsActivePlans.length} active {wsActivePlans.length === 1 ? 'plan' : 'plans'}
+                            </span>
+                            <span className="text-gray-300 dark:text-gray-600">•</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              {formatDuration(wsCompleted)} done
+                            </span>
+                          </div>
+                        </div>
+                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                          {wsProgress}%
                         </span>
                       </div>
+
+                      {/* Learning Progress Bar */}
+                      <Progress value={wsProgress} className="h-1.5 w-full mt-1" />
                     </div>
-                    <Badge
-                      variant={workspace.access === 'private' ? 'secondary' : 'default'}
-                      className="flex-shrink-0"
-                    >
-                      {workspace.access || 'shared'}
-                    </Badge>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </CardContent>

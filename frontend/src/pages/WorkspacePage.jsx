@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { workspaceAPI, planAPI } from "../api/index.js"
 import { useToast } from "../context/ToastContext.jsx"
-import { Plus, ArrowLeft, Folder, BookOpen, Calendar, Sun, Layers, MoreVertical, Pencil, Trash2 } from "lucide-react"
+import { Plus, ArrowLeft, Folder, BookOpen, Calendar, Sun, Layers, MoreVertical, Pencil, Trash2, Archive, Bookmark, RotateCcw } from "lucide-react"
 import Button from "../components/ui/Button.jsx"
 import Input from "../components/ui/Input.jsx"
 import { Card, CardContent } from "../components/ui/Card.jsx"
@@ -30,6 +30,7 @@ function WorkspacePage() {
   const [plans, setPlans] = useState([])
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
+  const [statusFilter, setStatusFilter] = useState("active") // "active" | "stashed" | "archived" | "all"
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -55,6 +56,18 @@ function WorkspacePage() {
       navigate("/workspaces")
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleUpdatePlanStatus = async (planId, newStatus) => {
+    try {
+      await planAPI.update(planId, { status: newStatus })
+      setPlans((prev) =>
+        prev.map((p) => (p._id === planId ? { ...p, status: newStatus } : p))
+      )
+      toast.success(`Plan marked as ${newStatus}`)
+    } catch (error) {
+      toast.error(error.message || "Failed to update status")
     }
   }
 
@@ -100,6 +113,19 @@ function WorkspacePage() {
     setModalOpen(true)
   }
 
+  const filteredPlans = plans.filter((plan) => {
+    const currentStatus = plan.status || "active"
+    if (statusFilter === "all") return true
+    return currentStatus === statusFilter
+  })
+
+  const countByStatus = {
+    active: plans.filter((p) => (p.status || "active") === "active").length,
+    stashed: plans.filter((p) => p.status === "stashed").length,
+    archived: plans.filter((p) => p.status === "archived").length,
+    all: plans.length,
+  }
+
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -111,7 +137,7 @@ function WorkspacePage() {
   return (
     <div className="p-6 lg:p-8">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-6">
         <Button variant="ghost" className="mb-4" onClick={() => navigate("/workspaces")}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Workspaces
@@ -139,74 +165,158 @@ function WorkspacePage() {
         </div>
       </div>
 
+      {/* Status Filter Tabs (Active, Stashed, Archived, All) */}
+      <div className="flex items-center gap-2 border-b border-gray-200 dark:border-gray-800 pb-3 mb-6">
+        {[
+          { key: "active", label: "Active", count: countByStatus.active },
+          { key: "stashed", label: "Stashed", count: countByStatus.stashed, icon: Bookmark },
+          { key: "archived", label: "Archived", count: countByStatus.archived, icon: Archive },
+          { key: "all", label: "All Plans", count: countByStatus.all },
+        ].map((tab) => {
+          const Icon = tab.icon
+          const isActive = statusFilter === tab.key
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setStatusFilter(tab.key)}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                isActive
+                  ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 font-semibold"
+                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+              }`}
+            >
+              {Icon && <Icon className="h-3.5 w-3.5" />}
+              <span>{tab.label}</span>
+              <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                isActive 
+                  ? "bg-emerald-200/60 dark:bg-emerald-800/60 text-emerald-800 dark:text-emerald-200" 
+                  : "bg-gray-200/60 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+              }`}>
+                {tab.count}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+
       {/* Plans Grid */}
-      {plans.length === 0 ? (
+      {filteredPlans.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <Layers className="h-16 w-16 text-gray-300 dark:text-gray-600" />
-            <h2 className="mt-4 text-xl font-semibold text-gray-900 dark:text-gray-100">No plans yet</h2>
+            <h2 className="mt-4 text-xl font-semibold text-gray-900 dark:text-gray-100">
+              {statusFilter === "stashed" 
+                ? "No stashed plans" 
+                : statusFilter === "archived" 
+                ? "No archived plans" 
+                : "No plans yet"}
+            </h2>
             <p className="mt-2 text-gray-500 dark:text-gray-400">
-              Create your first plan to start organizing your work
+              {statusFilter === "stashed"
+                ? "Plans you stash for future reference or pause will appear here"
+                : statusFilter === "archived"
+                ? "Completed or closed plans you archive will appear here"
+                : "Create your first plan to start organizing your work"}
             </p>
-            <Button className="mt-6" onClick={openCreateModal}>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Plan
-            </Button>
+            {statusFilter === "active" && (
+              <Button className="mt-6" onClick={openCreateModal}>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Plan
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {plans.map((plan) => {
+          {filteredPlans.map((plan) => {
             const Icon = PLAN_TYPE_ICONS[plan.type] || Layers
             const typeConfig = PLAN_TYPE_LABELS[plan.type] || {}
+            const currentStatus = plan.status || "active"
 
             return (
-              <Card key={plan._id} className="cursor-pointer transition-shadow hover:shadow-md">
-                <CardContent className="p-6">
+              <Card 
+                key={plan._id} 
+                onClick={() => navigate(`/plans/${plan._id}`)}
+                className="cursor-pointer transition-all duration-200 hover:shadow-md hover:border-emerald-500/30 active:scale-[0.99]"
+              >
+                <CardContent className="p-5">
                   <div className="flex items-start justify-between">
                     <div
-                      className="flex h-10 w-10 items-center justify-center rounded-lg"
+                      className="flex h-10 w-10 items-center justify-center rounded-lg shadow-xs"
                       style={{ backgroundColor: plan.color || typeConfig.color }}
-                      onClick={() => navigate(`/plans/${plan._id}`)}
                     >
                       <Icon className="h-5 w-5 text-white" />
                     </div>
-                    <Dropdown
-                      trigger={
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      }
-                      align="right"
-                    >
-                      <DropdownItem onClick={() => navigate(`/plans/${plan._id}`)}>
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Edit
-                      </DropdownItem>
-                      <DropdownSeparator />
-                      <DropdownItem onClick={() => handleDeletePlan(plan)} destructive>
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
-                      </DropdownItem>
-                    </Dropdown>
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <Dropdown
+                        trigger={
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        }
+                        align="right"
+                      >
+                        <DropdownItem onClick={() => navigate(`/plans/${plan._id}`)}>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Edit
+                        </DropdownItem>
+                        
+                        <DropdownSeparator />
+                        {currentStatus === "active" ? (
+                          <>
+                            <DropdownItem onClick={() => handleUpdatePlanStatus(plan._id, "stashed")}>
+                              <Bookmark className="mr-2 h-4 w-4 text-purple-500" />
+                              Stash for later
+                            </DropdownItem>
+                            <DropdownItem onClick={() => handleUpdatePlanStatus(plan._id, "archived")}>
+                              <Archive className="mr-2 h-4 w-4 text-amber-500" />
+                              Archive plan
+                            </DropdownItem>
+                          </>
+                        ) : (
+                          <DropdownItem onClick={() => handleUpdatePlanStatus(plan._id, "active")}>
+                            <RotateCcw className="mr-2 h-4 w-4 text-emerald-600" />
+                            Restore to Active
+                          </DropdownItem>
+                        )}
+
+                        <DropdownSeparator />
+                        <DropdownItem onClick={() => handleDeletePlan(plan)} destructive>
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownItem>
+                      </Dropdown>
+                    </div>
                   </div>
 
-                  <div className="mt-4" onClick={() => navigate(`/plans/${plan._id}`)}>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{plan.name}</h3>
-                    <Badge variant="secondary" className="mt-2">
+                  <div className="mt-4">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 flex-1 truncate">{plan.name}</h3>
+                      {currentStatus === "stashed" && (
+                        <Badge variant="secondary" className="bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 text-xs">
+                          Stashed
+                        </Badge>
+                      )}
+                      {currentStatus === "archived" && (
+                        <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 text-xs">
+                          Archived
+                        </Badge>
+                      )}
+                    </div>
+                    <Badge variant="secondary" className="mt-1.5 text-xs">
                       {typeConfig.label || plan.type}
                     </Badge>
                   </div>
 
-                  <div className="mt-4">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500 dark:text-gray-400">Progress</span>
-                      <span className="font-medium text-gray-900 dark:text-gray-100">{plan.progress || 0}%</span>
+                  <div className="mt-3.5">
+                    <div className="flex items-center justify-between text-xs mb-1">
+                      <span className="text-gray-500 dark:text-gray-400 font-medium">Progress</span>
+                      <span className="font-semibold text-gray-900 dark:text-gray-100">{plan.progress || 0}%</span>
                     </div>
-                    <Progress value={plan.progress || 0} className="mt-2" />
+                    <Progress value={plan.progress || 0} className="h-1.5" />
                   </div>
 
-                  <div className="mt-4 flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+                  <div className="mt-3 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-2 border-t border-gray-100 dark:border-gray-800">
                     <span>{formatDuration(plan.totalDuration)}</span>
                     <span>{formatDuration(plan.completedDuration)} completed</span>
                   </div>

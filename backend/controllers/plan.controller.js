@@ -11,11 +11,12 @@ import connectDB from "../config/db.js"
 // @access  Private
 export const getPlans = asyncHandler(async (req, res) => {
   await connectDB();
-  const { workspace, type } = req.query
+  const { workspace, type, status } = req.query
 
   const query = { isDeleted: false }
   if (workspace) query.workspace = workspace
   if (type) query.type = type
+  if (status) query.status = status
 
   const plans = await Plan.find(query)
     .populate("createdBy", "name email avatar")
@@ -118,7 +119,7 @@ export const createPlan = asyncHandler(async (req, res) => {
 // @access  Private
 export const updatePlan = asyncHandler(async (req, res) => {
   await connectDB();
-  const { name, description, collaborationType, collaborators, startDate, endDate, deadline, color, icon, metadata } =
+  const { name, description, collaborationType, collaborators, startDate, endDate, deadline, color, icon, metadata, status, tags } =
     req.body
 
   let plan = await Plan.findById(req.params.id)
@@ -128,20 +129,23 @@ export const updatePlan = asyncHandler(async (req, res) => {
     throw new Error("Plan not found")
   }
 
+  const updateFields = {}
+  if (name !== undefined) updateFields.name = name
+  if (description !== undefined) updateFields.description = description
+  if (collaborationType !== undefined) updateFields.collaborationType = collaborationType
+  if (collaborators !== undefined) updateFields.collaborators = collaborators
+  if (startDate !== undefined) updateFields.startDate = startDate
+  if (endDate !== undefined) updateFields.endDate = endDate
+  if (deadline !== undefined) updateFields.deadline = deadline
+  if (color !== undefined) updateFields.color = color
+  if (icon !== undefined) updateFields.icon = icon
+  if (metadata !== undefined) updateFields.metadata = { ...plan.metadata, ...metadata }
+  if (status !== undefined) updateFields.status = status
+  if (tags !== undefined) updateFields.tags = tags
+
   plan = await Plan.findByIdAndUpdate(
     req.params.id,
-    {
-      name,
-      description,
-      collaborationType,
-      collaborators,
-      startDate,
-      endDate,
-      deadline,
-      color,
-      icon,
-      metadata: { ...plan.metadata, ...metadata },
-    },
+    updateFields,
     { new: true, runValidators: true },
   )
     .populate("createdBy", "name email avatar")

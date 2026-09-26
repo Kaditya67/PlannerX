@@ -46,8 +46,16 @@
   border-color: var(--color-border);
 }
 
+html {
+  font-size: 14px; /* Crisp professional SaaS scale (Linear / Raycast / Notion style) */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 body {
   background-color: var(--color-background);
   color: var(--color-foreground);
   font-feature-settings: "rlig" 1, "calt" 1;
+  font-size: 0.875rem;
+  line-height: 1.45;
 }

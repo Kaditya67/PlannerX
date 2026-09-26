@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react"
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom"
 import { useAuth } from "../context/AuthContext.jsx"
 import { useTheme } from "../context/ThemeContext.jsx"
+import { useLocalStorage } from "../hooks/useLocalStorage.js"
 import {
   Layers,
   LayoutDashboard,
@@ -15,6 +16,8 @@ import {
   Menu,
   X,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react"
 import Button from "../components/ui/Button.jsx"
 import Avatar from "../components/ui/Avatar.jsx"
@@ -31,10 +34,11 @@ const navItems = [
 
 function MainLayout() {
   const { user, logout } = useAuth()
-  const { theme, setTheme } = useTheme()
+  const { theme, setTheme, isDark, toggleTheme } = useTheme()
   const navigate = useNavigate()
   const location = useLocation()
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false) // Mobile drawer
+  const [isCollapsed, setIsCollapsed] = useLocalStorage("planner_sidebar_collapsed", false) // Desktop collapsed mode
   const [userDropdownOpen, setUserDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
   const triggerRef = useRef(null)
@@ -70,7 +74,7 @@ function MainLayout() {
   const activeNavItem = navItems.find(item => location.pathname.startsWith(item.path))
 
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="flex h-screen w-screen overflow-hidden bg-gray-50 dark:bg-gray-950">
       {/* Mobile Overlay */}
       {sidebarOpen && (
         <div 
@@ -83,20 +87,52 @@ function MainLayout() {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-gray-200 bg-white shadow-xl transition-all duration-300 ease-in-out lg:static lg:z-auto lg:translate-x-0 lg:shadow-none dark:border-gray-800 dark:bg-gray-900",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          "fixed inset-y-0 left-0 z-50 flex h-full flex-col border-r border-gray-200 bg-white shadow-xl transition-all duration-300 ease-in-out lg:static lg:z-auto lg:shadow-none dark:border-gray-800 dark:bg-gray-900",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+          isCollapsed ? "lg:w-16" : "lg:w-56",
+          "w-56"
         )}
       >
         {/* Logo Section */}
-        <div className="flex h-16 items-center justify-between border-b border-gray-200 px-6 dark:border-gray-800">
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 dark:bg-emerald-500">
+        <div className={cn(
+          "flex h-14 items-center border-b border-gray-200 dark:border-gray-800 transition-all",
+          isCollapsed ? "justify-center px-0 w-full" : "justify-between px-3.5"
+        )}>
+          {/* Collapsed State: Perfectly Centered Clickable Logo */}
+          {isCollapsed ? (
+            <button 
+              onClick={() => setIsCollapsed(false)}
+              className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-600 dark:bg-emerald-500 shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer"
+              title="Planner - Click to expand sidebar"
+              aria-label="Expand sidebar"
+            >
               <Layers className="h-5 w-5 text-white" />
-            </div>
-            <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
-              Planner
-            </span>
-          </div>
+            </button>
+          ) : (
+            <>
+              {/* Expanded State: Logo + Title */}
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600 dark:bg-emerald-500 shadow-sm">
+                  <Layers className="h-4.5 w-4.5 text-white shrink-0" />
+                </div>
+                <span className="text-base font-bold tracking-tight text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                  Planner
+                </span>
+              </div>
+
+              {/* Desktop Collapse Toggle */}
+              <button
+                onClick={() => setIsCollapsed(true)}
+                className="hidden lg:flex items-center justify-center h-8 w-8 rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors shrink-0"
+                title="Collapse sidebar"
+                aria-label="Collapse sidebar"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+            </>
+          )}
+
+          {/* Mobile Close Button */}
           <button
             onClick={() => setSidebarOpen(false)}
             className="rounded-md p-1.5 hover:bg-gray-100 lg:hidden dark:hover:bg-gray-800"
@@ -106,27 +142,32 @@ function MainLayout() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 space-y-1.5 p-4">
+        <nav className="flex-1 space-y-1 p-2.5 overflow-y-auto">
           {navItems.map((item) => {
             const Icon = item.icon
+            const isActive = location.pathname.startsWith(item.path)
             return (
               <NavLink
                 key={item.path}
                 to={item.path}
-                className={({ isActive }) =>
+                title={isCollapsed ? item.label : undefined}
+                className={({ isActive: navActive }) =>
                   cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                    "flex items-center rounded-lg text-sm font-medium transition-all duration-150",
+                    isCollapsed ? "lg:justify-center lg:px-2 py-2 px-2.5 gap-3" : "gap-3 px-3 py-2.5",
                     "hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-gray-100",
-                    isActive
-                      ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
+                    navActive
+                      ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400 font-semibold shadow-xs"
                       : "text-gray-600 dark:text-gray-400"
                   )
                 }
                 onClick={() => setSidebarOpen(false)}
               >
-                <Icon className="h-5 w-5" />
-                <span>{item.label}</span>
-                {location.pathname.startsWith(item.path) && (
+                <Icon className="h-4.5 w-4.5 shrink-0" />
+                {(!isCollapsed || sidebarOpen) && (
+                  <span className="truncate">{item.label}</span>
+                )}
+                {(!isCollapsed || sidebarOpen) && isActive && (
                   <div className="ml-auto h-1.5 w-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400" />
                 )}
               </NavLink>
@@ -134,14 +175,28 @@ function MainLayout() {
           })}
         </nav>
 
-        {/* User Section - Fixed at bottom */}
-        <div className="border-t border-gray-200 p-4 dark:border-gray-800">
+        {/* User Section & Expand Action */}
+        <div className="shrink-0 border-t border-gray-200 p-3 space-y-2 dark:border-gray-800">
+          {/* Desktop Expand Toggle when collapsed */}
+          {isCollapsed && (
+            <button
+              onClick={() => setIsCollapsed(false)}
+              className="hidden lg:flex w-full items-center justify-center p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100 transition-colors"
+              title="Expand sidebar"
+              aria-label="Expand sidebar"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          )}
+
           <div className="relative" ref={dropdownRef}>
             <button
               ref={triggerRef}
               onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+              title={isCollapsed ? (user?.name || "User") : undefined}
               className={cn(
-                "flex w-full items-center gap-3 rounded-lg p-2.5 transition-all duration-200",
+                "flex w-full items-center rounded-lg p-2 transition-all duration-200",
+                isCollapsed ? "lg:justify-center gap-0" : "gap-3",
                 "hover:bg-gray-100 dark:hover:bg-gray-800",
                 userDropdownOpen && "bg-gray-100 dark:bg-gray-800"
               )}
@@ -151,42 +206,50 @@ function MainLayout() {
               <Avatar 
                 name={user?.name} 
                 size="sm"
-                className="ring-2 ring-offset-2 ring-transparent group-hover:ring-emerald-500/20"
+                className="shrink-0 ring-2 ring-offset-2 ring-transparent group-hover:ring-emerald-500/20"
               />
-              <div className="flex-1 overflow-hidden text-left">
-                <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
-                  {user?.name || "User"}
-                </p>
-                <p className="truncate text-xs text-gray-500 dark:text-gray-400">
-                  {user?.email || "user@example.com"}
-                </p>
-              </div>
-              <ChevronDown className={cn(
-                "h-4 w-4 text-gray-400 transition-transform duration-200",
-                userDropdownOpen && "rotate-180"
-              )} />
+              {(!isCollapsed || sidebarOpen) && (
+                <>
+                  <div className="flex-1 overflow-hidden text-left">
+                    <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
+                      {user?.name || "User"}
+                    </p>
+                    <p className="truncate text-xs text-gray-500 dark:text-gray-400">
+                      {user?.email || "user@example.com"}
+                    </p>
+                  </div>
+                  <ChevronDown className={cn(
+                    "h-4 w-4 text-gray-400 transition-transform duration-200 shrink-0",
+                    userDropdownOpen && "rotate-180"
+                  )} />
+                </>
+              )}
             </button>
 
             {/* Custom Dropdown */}
             {userDropdownOpen && (
-              <div className="absolute bottom-full left-4 right-4 mb-2 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900">
+              <div className={cn(
+                "absolute bottom-full mb-2 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900 z-50",
+                isCollapsed ? "left-0 w-52" : "left-0 right-0"
+              )}>
                 <div className="py-1">
                   <button
-                    onClick={() =>
-                      setTheme(theme === "dark" ? "light" : "dark")
-                    }
+                    onClick={() => {
+                      toggleTheme()
+                      setUserDropdownOpen(false)
+                    }}
                     className="flex w-full items-center gap-2 px-4 py-2.5 text-sm
                               text-gray-700 hover:bg-gray-50
                               dark:text-gray-300 dark:hover:bg-gray-800"
                   >
-                    {theme === "dark" ? (
+                    {isDark ? (
                       <>
-                        <Sun className="h-4 w-4" />
+                        <Sun className="h-4 w-4 text-amber-500" />
                         Switch to Light Mode
                       </>
                     ) : (
                       <>
-                        <Moon className="h-4 w-4" />
+                        <Moon className="h-4 w-4 text-blue-500" />
                         Switch to Dark Mode
                       </>
                     )}
@@ -244,15 +307,14 @@ function MainLayout() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() =>
-                setTheme(theme === "dark" ? "light" : "dark")
-              }
+              onClick={toggleTheme}
               className="h-9 w-9"
+              aria-label="Toggle theme"
             >
-              {theme === "dark" ? (
-                <Sun className="h-5 w-5" />
+              {isDark ? (
+                <Sun className="h-5 w-5 text-amber-500" />
               ) : (
-                <Moon className="h-5 w-5" />
+                <Moon className="h-5 w-5 text-blue-500" />
               )}
             </Button>
             <button

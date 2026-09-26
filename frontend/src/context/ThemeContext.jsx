@@ -64,8 +64,15 @@ export function ThemeProvider({ children }) {
     return () => mediaQuery.removeEventListener("change", handleChange)
   }, [theme])
 
+  // Determine whether effective theme is dark
+  const isDark = theme === "dark" || (theme === "system" && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches)
+
+  const toggleTheme = () => {
+    setTheme(isDark ? "light" : "dark")
+  }
+
   return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, isDark, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   )

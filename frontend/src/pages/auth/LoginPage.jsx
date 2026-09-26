@@ -82,7 +82,7 @@ function LoginPage() {
               />
             </div>
           </CardContent>
-          <CardFooter className="flex-col gap-4 pt-2">
+          <CardFooter className="flex-col gap-3 pt-2">
             <Button 
               type="submit" 
               className="w-full py-2.5 text-base font-medium bg-emerald-600 hover:bg-emerald-700 text-white transition-colors"
@@ -91,7 +91,64 @@ function LoginPage() {
             >
               {loading ? "Signing in..." : "Sign In"}
             </Button>
-            <div className="text-center text-sm text-gray-600 dark:text-gray-400">
+
+            {/* 1-Click Demo Testing Button */}
+            <div className="relative w-full my-1">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200 dark:border-gray-800" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white dark:bg-gray-900 px-2 text-muted-foreground">
+                  Quick Access
+                </span>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full py-2.5 border-dashed border-emerald-500/50 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300"
+              disabled={loading}
+              onClick={async () => {
+                const demoEmail = "demo@planner.local"
+                const demoPassword = "password123"
+                setEmail(demoEmail)
+                setPassword(demoPassword)
+                setLoading(true)
+                try {
+                  await login({ email: demoEmail, password: demoPassword })
+                  toast.success("Logged in as Demo User!")
+                  navigate(from, { replace: true })
+                } catch (err) {
+                  // If user doesn't exist yet, auto-register demo user
+                  try {
+                    const { register } = (await import("../../context/AuthContext.jsx"))
+                    // Use register via auth context
+                    const res = await fetch("/api/auth/register", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ name: "Demo User", email: demoEmail, password: demoPassword }),
+                    })
+                    const data = await res.json()
+                    if (data?.data?.token) {
+                      localStorage.setItem("token", data.data.token)
+                      localStorage.setItem("user", JSON.stringify(data.data.user))
+                      window.location.href = from
+                      return
+                    }
+                  } catch (e) {
+                    // Ignore fallback
+                  }
+                  toast.error(err.message || "Failed to log in with demo account")
+                } finally {
+                  setLoading(false)
+                }
+              }}
+            >
+              ⚡ 1-Click Demo Login
+            </Button>
+
+            <div className="text-center text-sm text-gray-600 dark:text-gray-400 mt-1">
               Don't have an account?{" "}
               <Link 
                 to="/register" 

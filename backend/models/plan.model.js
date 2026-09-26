@@ -52,6 +52,12 @@ const planSchema = new mongoose.Schema(
       autoGenerateSessions: { type: Boolean, default: false },
       sessionDuration: { type: Number, default: 60 }, // in minutes
     },
+    status: {
+      type: String,
+      enum: ["active", "archived", "stashed"],
+      default: "active",
+    },
+    tags: [{ type: String, trim: true }],
     isDeleted: { type: Boolean, default: false },
     deletedAt: { type: Date, default: null },
   },

@@ -1,21 +1,23 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { workspaceAPI } from "../api/index.js"
+import { workspaceAPI, planAPI } from "../api/index.js"
 import { useToast } from "../context/ToastContext.jsx"
-import { Plus, Folder, MoreVertical, Pencil, Trash2, Users } from "lucide-react"
+import { Plus, Folder, MoreVertical, Pencil, Trash2, Users, Clock, CheckCircle2, TrendingUp } from "lucide-react"
 import Button from "../components/ui/Button.jsx"
 import Input from "../components/ui/Input.jsx"
 import { Card, CardContent } from "../components/ui/Card.jsx"
 import Badge from "../components/ui/Badge.jsx"
+import Progress from "../components/ui/Progress.jsx"
 import Modal from "../components/ui/Modal.jsx"
 import LoadingSpinner from "../components/ui/LoadingSpinner.jsx"
 import { Dropdown, DropdownItem, DropdownSeparator } from "../components/ui/Dropdown.jsx"
-import { generateColor } from "../utils/helpers.js"
+import { generateColor, formatDuration } from "../utils/helpers.js"
 
 function WorkspacesPage() {
   const navigate = useNavigate()
   const { toast } = useToast()
   const [workspaces, setWorkspaces] = useState([])
+  const [plans, setPlans] = useState([])
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingWorkspace, setEditingWorkspace] = useState(null)
@@ -23,17 +25,69 @@ function WorkspacesPage() {
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
-    fetchWorkspaces()
+    fetchData()
   }, [])
 
-  const fetchWorkspaces = async () => {
+  const fetchData = async () => {
     try {
-      const { data } = await workspaceAPI.getAll()
-      setWorkspaces(data || [])
+      const [workspacesRes, plansRes] = await Promise.allSettled([
+        workspaceAPI.getAll(),
+        planAPI.getAll(),
+      ])
+
+      if (workspacesRes.status === "fulfilled") {
+        setWorkspaces(workspacesRes.value.data || [])
+      }
+      if (plansRes.status === "fulfilled") {
+        setPlans(plansRes.value.data || [])
+      }
     } catch (error) {
       toast.error("Failed to load workspaces")
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Compute stats for each individual workspace
+  const getWorkspaceStats = (workspaceId) => {
+    const wsPlans = plans.filter(
+      (p) => (p.workspace?._id || p.workspace) === workspaceId
+    )
+
+    let totalDuration = 0
+    let completedDuration = 0
+    let activeCount = 0
+    let stashedCount = 0
+    let archivedCount = 0
+
+    wsPlans.forEach((p) => {
+      const s = p.status || "active"
+      if (s === "active") {
+        activeCount++
+        totalDuration += p.totalDuration || 0
+        completedDuration += p.completedDuration || 0
+      } else if (s === "stashed") {
+        stashedCount++
+      } else if (s === "archived") {
+        archivedCount++
+      }
+    })
+
+    const progress =
+      totalDuration > 0
+        ? Math.round((completedDuration / totalDuration) * 100)
+        : activeCount > 0 && completedDuration > 0
+        ? 100
+        : 0
+
+    return {
+      plansCount: wsPlans.length,
+      activeCount,
+      stashedCount,
+      archivedCount,
+      totalDuration,
+      completedDuration,
+      progress,
     }
   }
 
@@ -100,7 +154,7 @@ function WorkspacesPage() {
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Workspaces</h1>
-          <p className="mt-1 text-gray-500 dark:text-gray-400">Organize your plans into workspaces</p>
+          <p className="mt-1 text-gray-500 dark:text-gray-400">Track learning progress and roadmaps per domain</p>
         </div>
         <Button onClick={() => handleOpenModal()}>
           <Plus className="mr-2 h-4 w-4" />
@@ -124,57 +178,87 @@ function WorkspacesPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {workspaces.map((workspace) => (
-            <Card key={workspace._id} className="cursor-pointer transition-shadow hover:shadow-md">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between">
-                  <div
-                    className="flex h-12 w-12 items-center justify-center rounded-lg"
-                    style={{ backgroundColor: workspace.color || "#10B981" }}
-                    onClick={() => navigate(`/workspaces/${workspace._id}`)}
-                  >
-                    <Folder className="h-6 w-6 text-white" />
-                  </div>
-                  <Dropdown
-                    trigger={
-                      <Button variant="ghost" size="icon">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    }
-                    align="right"
-                  >
-                    <DropdownItem onClick={() => handleOpenModal(workspace)}>
-                      <Pencil className="mr-2 h-4 w-4" />
-                      Edit
-                    </DropdownItem>
-                    <DropdownSeparator />
-                    <DropdownItem onClick={() => handleDelete(workspace)} destructive>
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
-                    </DropdownItem>
-                  </Dropdown>
-                </div>
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {workspaces.map((workspace) => {
+            const stats = getWorkspaceStats(workspace._id)
 
-                <div className="mt-4" onClick={() => navigate(`/workspaces/${workspace._id}`)}>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{workspace.name}</h3>
-                  {workspace.description && (
-                    <p className="mt-1 line-clamp-2 text-sm text-gray-500 dark:text-gray-400">
-                      {workspace.description}
-                    </p>
-                  )}
-                </div>
-
-                <div className="mt-4 flex items-center justify-between">
-                  <Badge variant="secondary">{workspace.plansCount || 0} plans</Badge>
-                  <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
-                    <Users className="h-4 w-4" />
-                    {(workspace.members?.length || 0) + 1}
+            return (
+              <Card 
+                key={workspace._id} 
+                onClick={() => navigate(`/workspaces/${workspace._id}`)}
+                className="cursor-pointer transition-all duration-200 hover:shadow-lg dark:hover:shadow-gray-800/40 hover:-translate-y-0.5 border border-gray-200 dark:border-gray-800 group"
+              >
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between">
+                    <div
+                      className="flex h-12 w-12 items-center justify-center rounded-xl shadow-sm transition-transform group-hover:scale-105"
+                      style={{ backgroundColor: workspace.color || "#10B981" }}
+                    >
+                      <Folder className="h-6 w-6 text-white" />
+                    </div>
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <Dropdown
+                        trigger={
+                          <Button variant="ghost" size="icon" className="hover:bg-gray-100 dark:hover:bg-gray-800">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        }
+                        align="right"
+                      >
+                        <DropdownItem onClick={() => handleOpenModal(workspace)}>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Edit
+                        </DropdownItem>
+                        <DropdownSeparator />
+                        <DropdownItem onClick={() => handleDelete(workspace)} destructive>
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownItem>
+                      </Dropdown>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+
+                  <div className="mt-4">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                      {workspace.name}
+                    </h3>
+                    {workspace.description && (
+                      <p className="mt-1 line-clamp-2 text-sm text-gray-500 dark:text-gray-400">
+                        {workspace.description}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Individual Learning Progress Bar */}
+                  <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
+                    <div className="flex items-center justify-between text-xs mb-1.5">
+                      <span className="font-medium text-gray-500 dark:text-gray-400">Learning Progress</span>
+                      <span className="font-bold text-gray-900 dark:text-gray-100">{stats.progress}%</span>
+                    </div>
+                    <Progress value={stats.progress} className="h-2" />
+                  </div>
+
+                  {/* Time & Plan Breakdown */}
+                  <div className="mt-3 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center gap-1.5">
+                      <Clock className="h-3.5 w-3.5" />
+                      <span>{formatDuration(stats.completedDuration)} / {formatDuration(stats.totalDuration)}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                        {stats.activeCount} active
+                      </Badge>
+                      {stats.stashedCount > 0 && (
+                        <span className="text-xs text-purple-600 dark:text-purple-400 font-medium">
+                          +{stats.stashedCount} stashed
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })}
         </div>
       )}
 

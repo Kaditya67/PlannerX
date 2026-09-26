@@ -121,6 +121,16 @@ function PlanPage() {
     }
   }
 
+  const handleUpdateStatus = async (newStatus) => {
+    try {
+      await planAPI.update(planId, { status: newStatus })
+      toast.success(`Plan marked as ${newStatus}`)
+      window.location.reload()
+    } catch (error) {
+      toast.error(error.message || "Failed to update status")
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -148,6 +158,7 @@ function PlanPage() {
           onAddSection={() => openSectionModal()}
           onDownload={handleDownload}
           onSmartEdit={() => setSmartEditorOpen(true)}
+          onUpdateStatus={handleUpdateStatus}
         />
 
         {/* Progress Card */}

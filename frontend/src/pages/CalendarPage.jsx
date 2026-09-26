@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react"
 import { sessionAPI } from "../api/index.js"
 import { useToast } from "../context/ToastContext.jsx"
-import { ChevronLeft, ChevronRight, Clock, Play, Square } from "lucide-react"
+import { ChevronLeft, ChevronRight, Clock, Play, Square, Calendar as CalendarIcon, CheckCircle2 } from "lucide-react"
 
 import Button from "../components/ui/Button.jsx"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card.jsx"
@@ -10,20 +10,10 @@ import LoadingSpinner from "../components/ui/LoadingSpinner.jsx"
 
 import { cn, formatDuration } from "../utils/helpers.js"
 
-const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+const DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
 const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
 ]
 
 function CalendarPage() {
@@ -32,11 +22,8 @@ function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [sessions, setSessions] = useState([])
   const [loading, setLoading] = useState(true)
-  const [selectedDate, setSelectedDate] = useState(null)
+  const [selectedDate, setSelectedDate] = useState(new Date())
 
-  /* --------------------------------------------
-     Fetch sessions for current month
-  --------------------------------------------- */
   useEffect(() => {
     fetchSessions()
   }, [currentDate])
@@ -60,19 +47,14 @@ function CalendarPage() {
     }
   }
 
-  /* --------------------------------------------
-     Group sessions by date (PERFORMANCE FIX)
-  --------------------------------------------- */
   const sessionsByDate = useMemo(() => {
     const map = new Map()
-
     sessions.forEach((session) => {
       const d = new Date(session.startTime)
       const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
       if (!map.has(key)) map.set(key, [])
       map.get(key).push(session)
     })
-
     return map
   }, [sessions])
 
@@ -82,9 +64,6 @@ function CalendarPage() {
     return sessionsByDate.get(key) || []
   }
 
-  /* --------------------------------------------
-     Calendar helpers
-  --------------------------------------------- */
   const getDaysInMonth = () => {
     const year = currentDate.getFullYear()
     const month = currentDate.getMonth()
@@ -94,7 +73,6 @@ function CalendarPage() {
     const days = []
     for (let i = 0; i < firstDay; i++) days.push(null)
     for (let i = 1; i <= daysInMonth; i++) days.push(new Date(year, month, i))
-
     return days
   }
 
@@ -123,64 +101,84 @@ function CalendarPage() {
       next.setMonth(prev.getMonth() + direction)
       return next
     })
-    setSelectedDate(null) // UX FIX
   }
 
   const days = getDaysInMonth()
   const selectedDateSessions = selectedDate ? getSessionsForDate(selectedDate) : []
+  const totalMonthDuration = sessions.reduce((acc, s) => acc + (s.duration || 0), 0)
+  const completedMonthCount = sessions.filter((s) => s.status === "completed").length
 
-  /* --------------------------------------------
-     Loading state
-  --------------------------------------------- */
   if (loading) {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className="flex h-full items-center justify-center p-12">
         <LoadingSpinner size="lg" />
       </div>
     )
   }
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 md:p-6 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Calendar</h1>
-        <p className="mt-2 text-muted-foreground">
-          View your work sessions and track your productivity
-        </p>
+      <div className="mb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">Calendar & Activity</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Select any date to inspect your recorded focus sessions
+          </p>
+        </div>
+
+        {/* Quick Month Metrics Pill */}
+        <div className="flex items-center gap-2 self-start sm:self-auto bg-card border border-border px-3 py-1.5 rounded-lg text-xs shadow-sm">
+          <span className="text-muted-foreground">This month:</span>
+          <span className="font-semibold text-foreground">{sessions.length} sessions</span>
+          <span className="text-border">•</span>
+          <span className="font-semibold text-emerald-600 dark:text-emerald-400">{formatDuration(totalMonthDuration)}</span>
+        </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Calendar */}
-        <Card className="lg:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>
-              {MONTHS[currentDate.getMonth()]} {currentDate.getFullYear()}
-            </CardTitle>
-            <div className="flex gap-2">
-              <Button variant="outline" size="icon" onClick={() => navigateMonth(-1)}>
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>
-                Today
-              </Button>
-              <Button variant="outline" size="icon" onClick={() => navigateMonth(1)}>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+      {/* Main Unified Workspace Card */}
+      <div className="grid gap-5 md:grid-cols-12 items-start">
+        {/* Compact Calendar Picker */}
+        <Card className="md:col-span-5 border border-border shadow-sm">
+          <CardHeader className="p-4 pb-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold text-foreground">
+                {MONTHS[currentDate.getMonth()]} {currentDate.getFullYear()}
+              </span>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => navigateMonth(-1)}>
+                  <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-7 px-2 text-xs" 
+                  onClick={() => {
+                    const now = new Date()
+                    setCurrentDate(now)
+                    setSelectedDate(now)
+                  }}
+                >
+                  Today
+                </Button>
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => navigateMonth(1)}>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              </div>
             </div>
           </CardHeader>
 
-          <CardContent>
-            {/* Day headers */}
-            <div className="mb-2 grid grid-cols-7 gap-1">
+          <CardContent className="p-4 pt-1">
+            {/* Day name abbreviations */}
+            <div className="grid grid-cols-7 mb-1 text-center">
               {DAYS.map((day) => (
-                <div key={day} className="py-2 text-center text-sm font-medium text-muted-foreground">
+                <div key={day} className="py-1 text-[11px] font-semibold text-muted-foreground">
                   {day}
                 </div>
               ))}
             </div>
 
-            {/* Calendar grid */}
+            {/* Calendar numbers grid */}
             <div className="grid grid-cols-7 gap-1">
               {days.map((date, index) => {
                 const dateSessions = getSessionsForDate(date)
@@ -190,28 +188,22 @@ function CalendarPage() {
                   <button
                     key={index}
                     disabled={!date}
-                    aria-current={isToday(date) ? "date" : undefined}
-                    aria-selected={isSelected(date)}
-                    aria-label={
-                      date
-                        ? `${MONTHS[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`
-                        : undefined
-                    }
                     onClick={() => setSelectedDate(date)}
                     className={cn(
-                      "relative aspect-square rounded-lg p-2 text-sm transition-all",
-                      !date && "invisible",
-                      date && "hover:bg-accent",
-                      isToday(date) && "bg-primary/10 font-bold text-primary",
-                      isSelected(date) &&
-                        "bg-primary text-primary-foreground hover:bg-primary/90",
+                      "relative h-8 w-8 mx-auto rounded-md text-xs font-medium transition-all flex items-center justify-center",
+                      !date && "invisible pointer-events-none",
+                      date && "hover:bg-accent hover:text-foreground",
+                      isToday(date) && "border border-primary/40 font-bold text-primary",
+                      isSelected(date) && "bg-primary text-primary-foreground hover:bg-primary font-bold shadow-sm"
                     )}
                   >
                     <span>{date?.getDate()}</span>
                     {hasSession && (
                       <span
-                        title={`${dateSessions.length} session(s)`}
-                        className="absolute bottom-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-primary"
+                        className={cn(
+                          "absolute bottom-0.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full",
+                          isSelected(date) ? "bg-primary-foreground" : "bg-primary"
+                        )}
                       />
                     )}
                   </button>
@@ -221,69 +213,72 @@ function CalendarPage() {
           </CardContent>
         </Card>
 
-        {/* Selected Date Details */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">
-              {selectedDate
-                ? `${MONTHS[selectedDate.getMonth()]} ${selectedDate.getDate()}, ${selectedDate.getFullYear()}`
-                : "Select a date"}
-            </CardTitle>
+        {/* Sessions Activity on Selected Date */}
+        <Card className="md:col-span-7 border border-border shadow-sm">
+          <CardHeader className="p-4 pb-3 border-b border-border flex flex-row items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CalendarIcon className="h-4 w-4 text-emerald-500" />
+              <CardTitle className="text-sm font-semibold">
+                {selectedDate
+                  ? selectedDate.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" })
+                  : "Select a Date"}
+              </CardTitle>
+            </div>
+            {selectedDateSessions.length > 0 && (
+              <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                {selectedDateSessions.length} {selectedDateSessions.length === 1 ? "session" : "sessions"}
+              </Badge>
+            )}
           </CardHeader>
 
-          <CardContent>
-            {!selectedDate ? (
-              <p className="text-sm text-muted-foreground">
-                Click on a date to view sessions
-              </p>
-            ) : selectedDateSessions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <Clock className="h-12 w-12 text-muted-foreground/50" />
-                <p className="mt-4 text-sm text-muted-foreground">
-                  No sessions recorded
+          <CardContent className="p-4">
+            {selectedDateSessions.length === 0 ? (
+              <div className="py-10 text-center">
+                <Clock className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
+                <p className="text-sm font-medium text-foreground">No sessions logged for this day</p>
+                <p className="text-xs text-muted-foreground mt-1 max-w-xs mx-auto">
+                  Start focus timers from the Focus tab to record and track your activity here.
                 </p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2.5 max-h-[360px] overflow-y-auto pr-1">
                 {selectedDateSessions.map((session) => (
-                  <div key={session._id} className="rounded-lg border border-border p-3">
-                    <div className="flex items-center justify-between">
-                      <p className="font-medium text-foreground">
-                        {session.item?.title || "Focus Session"}
-                      </p>
-                      <Badge
-                        variant={session.status === "completed" ? "success" : "secondary"}
-                      >
-                        {session.status}
-                      </Badge>
+                  <div
+                    key={session._id}
+                    className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-accent/40 transition-colors"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium text-foreground truncate">
+                          {session.item?.title || "Focus Session"}
+                        </p>
+                        <Badge
+                          variant={session.status === "completed" ? "success" : "secondary"}
+                          className="text-[10px] uppercase tracking-wider py-0 px-1.5"
+                        >
+                          {session.status}
+                        </Badge>
+                      </div>
+
+                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Play className="h-3 w-3" />
+                          {new Date(session.startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                        {session.endTime && (
+                          <span className="flex items-center gap-1">
+                            <Square className="h-3 w-3" />
+                            {new Date(session.endTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                        )}
+                      </div>
                     </div>
 
-                    <div className="mt-2 flex items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Play className="h-3 w-3" />
-                        {new Date(session.startTime).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                    {session.duration > 0 && (
+                      <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-2 py-1 rounded">
+                        {formatDuration(session.duration)}
                       </span>
-
-                      {session.endTime && (
-                        <span className="flex items-center gap-1">
-                          <Square className="h-3 w-3" />
-                          {new Date(session.endTime).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                      )}
-
-                      {session.duration > 0 && (
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {formatDuration(session.duration)}
-                        </span>
-                      )}
-                    </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -291,55 +286,9 @@ function CalendarPage() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Monthly Stats */}
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle>Monthly Statistics</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <Stat label="Total Sessions" value={sessions.length} />
-            <Stat
-              label="Completed"
-              value={sessions.filter((s) => s.status === "completed").length}
-            />
-            <Stat
-              label="Total Time"
-              value={formatDuration(
-                sessions.reduce((acc, s) => acc + (s.duration || 0), 0),
-              )}
-            />
-            <Stat
-              label="Avg Duration"
-              value={
-                sessions.length
-                  ? formatDuration(
-                      Math.round(
-                        sessions.reduce((acc, s) => acc + (s.duration || 0), 0) /
-                          sessions.length,
-                      ),
-                    )
-                  : "0m"
-              }
-            />
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  )
-}
-
-/* --------------------------------------------
-   Small helper component
---------------------------------------------- */
-function Stat({ label, value }) {
-  return (
-    <div className="rounded-lg bg-accent/50 p-4 text-center">
-      <p className="text-2xl font-bold text-foreground">{value}</p>
-      <p className="text-sm text-muted-foreground">{label}</p>
     </div>
   )
 }
 
 export default CalendarPage
+

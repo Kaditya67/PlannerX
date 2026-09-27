@@ -10,7 +10,6 @@ import {
   Target,
   Clock,
   CheckCircle2,
-  Circle,
   Zap,
   Coffee,
   RotateCcw,
@@ -725,20 +724,9 @@ function FocusPage() {
                           : "border-border hover:bg-accent/50 text-foreground"
                       )}
                     >
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleCompleteItem(item)
-                        }}
-                        className="shrink-0 p-0.5"
-                        title="Mark task completed"
-                      >
-                        <Circle className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
-                      </button>
-
                       <div className="min-w-0 flex-1">
-                        <p className="truncate">{item.title}</p>
-                        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                        <p className="truncate font-medium">{item.title}</p>
+                        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mt-0.5">
                           <span
                             className="h-1.5 w-1.5 rounded-full shrink-0"
                             style={{ backgroundColor: item.planColor || "#10b981" }}

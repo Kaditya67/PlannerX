@@ -179,36 +179,36 @@ function WorkspacePage() {
   }
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       {/* Header */}
       <div className="mb-6">
-        <Button variant="ghost" className="mb-4" onClick={() => navigate("/workspaces")}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
+        <Button variant="ghost" size="sm" className="mb-3 text-xs text-muted-foreground hover:text-foreground" onClick={() => navigate("/workspaces")}>
+          <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
           Back to Workspaces
         </Button>
 
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-3.5 min-w-0">
             <div
-              className="flex h-14 w-14 items-center justify-center rounded-lg"
+              className="flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-xl shadow-xs"
               style={{ backgroundColor: workspace?.color || "#10B981" }}
             >
-              <Folder className="h-7 w-7 text-white" />
+              <Folder className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
             </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{workspace?.name}</h1>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100 truncate">{workspace?.name}</h1>
               {workspace?.description && (
-                <p className="mt-1 text-gray-500 dark:text-gray-400">{workspace.description}</p>
+                <p className="mt-0.5 text-xs sm:text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{workspace.description}</p>
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <Button variant="outline" onClick={() => setImportModalOpen(true)}>
+          <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
+            <Button variant="outline" size="sm" onClick={() => setImportModalOpen(true)}>
               <FileUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400 sm:mr-1.5" />
               <span className="hidden sm:inline">Import Template</span>
               <span className="sm:hidden">Import</span>
             </Button>
-            <Button onClick={openCreateModal}>
+            <Button size="sm" onClick={openCreateModal}>
               <Plus className="h-4 w-4 sm:mr-1.5" />
               <span className="hidden sm:inline">New Plan</span>
               <span className="sm:hidden">New</span>
@@ -218,12 +218,12 @@ function WorkspacePage() {
       </div>
 
       {/* Status Filter Tabs (Active, Stashed, Archived, All) */}
-      <div className="flex items-center gap-2 border-b border-gray-200 dark:border-gray-800 pb-3 mb-6">
+      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar border-b border-gray-200 dark:border-gray-800 pb-2.5 mb-6">
         {[
           { key: "active", label: "Active", count: countByStatus.active },
           { key: "stashed", label: "Stashed", count: countByStatus.stashed, icon: Bookmark },
           { key: "archived", label: "Archived", count: countByStatus.archived, icon: Archive },
-          { key: "all", label: "All Plans", count: countByStatus.all },
+          { key: "all", label: "All Plans", shortLabel: "All", count: countByStatus.all },
         ].map((tab) => {
           const Icon = tab.icon
           const isActive = statusFilter === tab.key
@@ -231,15 +231,15 @@ function WorkspacePage() {
             <button
               key={tab.key}
               onClick={() => setStatusFilter(tab.key)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all shrink-0 ${
                 isActive
                   ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 font-semibold"
                   : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
               }`}
             >
               {Icon && <Icon className="h-3.5 w-3.5" />}
-              <span>{tab.label}</span>
-              <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+              <span>{tab.shortLabel ? <><span className="hidden sm:inline">{tab.label}</span><span className="sm:hidden">{tab.shortLabel}</span></> : tab.label}</span>
+              <span className={`text-[11px] px-1.5 py-0.2 rounded-full font-medium ${
                 isActive 
                   ? "bg-emerald-200/60 dark:bg-emerald-800/60 text-emerald-800 dark:text-emerald-200" 
                   : "bg-gray-200/60 dark:bg-gray-800 text-gray-600 dark:text-gray-400"

@@ -181,15 +181,16 @@ function PlanPage() {
   }
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-6 lg:mb-8">
         <Button
           variant="ghost"
-          className="mb-4"
+          size="sm"
+          className="mb-3 text-xs text-muted-foreground hover:text-foreground"
           onClick={() => navigate(`/workspaces/${plan?.workspace?._id || plan?.workspace}`)}
         >
-          <ArrowLeft className="mr-2 h-4 w-4" />
+          <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
           Back to Workspace
         </Button>
 
@@ -204,31 +205,36 @@ function PlanPage() {
           onUpdateStatus={handleUpdateStatus}
         />
 
-        {/* Progress Card */}
-        <Card className="mt-6">
-          <CardContent className="flex flex-wrap items-center gap-6 p-6">
-            <div className="flex-1 min-w-[250px]">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-muted-foreground">Overall Progress</span>
-                <span className="text-lg font-bold text-foreground">{stats.progress}%</span>
+        {/* Progress Card - Compact & Responsive */}
+        <Card className="mt-4 lg:mt-6 border-border shadow-xs">
+          <CardContent className="p-3.5 sm:p-5 lg:p-6">
+            {/* Progress Bar & Percentage */}
+            <div className="mb-3.5">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs sm:text-sm font-semibold text-muted-foreground">Overall Progress</span>
+                <span className="text-sm sm:text-base font-bold text-foreground">{stats.progress}%</span>
               </div>
-              <Progress value={stats.progress} className="h-3" />
+              <Progress value={stats.progress} className="h-2 sm:h-2.5" />
             </div>
-            <div className="text-center px-4">
-              <p className="text-2xl font-bold text-foreground">{stats.totalItems}</p>
-              <p className="text-sm text-muted-foreground">Total Items</p>
-            </div>
-            <div className="text-center px-4">
-              <p className="text-2xl font-bold text-success">{stats.completedItems}</p>
-              <p className="text-sm text-muted-foreground">Completed</p>
-            </div>
-            <div className="text-center px-4">
-              <p className="text-2xl font-bold text-foreground">{formatDuration(stats.totalDuration)}</p>
-              <p className="text-sm text-muted-foreground">Total Time</p>
-            </div>
-            <div className="text-center px-4">
-              <p className="text-2xl font-bold text-success">{formatDuration(stats.completedDuration)}</p>
-              <p className="text-sm text-muted-foreground">Completed Time</p>
+
+            {/* Metrics Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 pt-2.5 border-t border-border">
+              <div className="rounded-lg bg-accent/40 p-2 sm:p-3 text-center">
+                <p className="text-base sm:text-xl font-bold text-foreground leading-tight">{stats.totalItems}</p>
+                <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Total Items</p>
+              </div>
+              <div className="rounded-lg bg-accent/40 p-2 sm:p-3 text-center">
+                <p className="text-base sm:text-xl font-bold text-emerald-600 dark:text-emerald-400 leading-tight">{stats.completedItems}</p>
+                <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Completed</p>
+              </div>
+              <div className="rounded-lg bg-accent/40 p-2 sm:p-3 text-center">
+                <p className="text-base sm:text-xl font-bold text-foreground leading-tight">{formatDuration(stats.totalDuration)}</p>
+                <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Total Time</p>
+              </div>
+              <div className="rounded-lg bg-accent/40 p-2 sm:p-3 text-center">
+                <p className="text-base sm:text-xl font-bold text-emerald-600 dark:text-emerald-400 leading-tight">{formatDuration(stats.completedDuration)}</p>
+                <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Completed Time</p>
+              </div>
             </div>
           </CardContent>
         </Card>

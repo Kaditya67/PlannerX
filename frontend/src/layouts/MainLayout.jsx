@@ -87,7 +87,7 @@ function MainLayout() {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex h-full flex-col border-r border-gray-200 bg-white shadow-xl transition-all duration-300 ease-in-out lg:static lg:z-auto lg:shadow-none dark:border-gray-800 dark:bg-gray-900",
+          "fixed inset-y-0 left-0 z-50 flex h-full flex-col border-r border-gray-200 bg-white shadow-xl transition-all duration-300 ease-in-out lg:static lg:z-30 lg:shadow-none dark:border-gray-800 dark:bg-gray-900",
           sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
           isCollapsed ? "lg:w-16" : "lg:w-56",
           "w-56"

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { workspaceAPI, planAPI } from "../api/index.js"
 import { useToast } from "../context/ToastContext.jsx"
+import { useConfirm } from "../context/ConfirmContext.jsx"
 import { Plus, ArrowLeft, Folder, BookOpen, Calendar, Sun, Layers, MoreVertical, Pencil, Trash2, Archive, Bookmark, RotateCcw, Share2, FileUp, Copy } from "lucide-react"
 import Button from "../components/ui/Button.jsx"
 import Input from "../components/ui/Input.jsx"
@@ -26,6 +27,7 @@ function WorkspacePage() {
   const { workspaceId } = useParams()
   const navigate = useNavigate()
   const { toast } = useToast()
+  const confirm = useConfirm()
   const [workspace, setWorkspace] = useState(null)
   const [plans, setPlans] = useState([])
   const [loading, setLoading] = useState(true)
@@ -126,7 +128,15 @@ function WorkspacePage() {
   }
 
   const handleDeletePlan = async (plan) => {
-    if (!confirm(`Delete "${plan.name}"? This action cannot be undone.`)) return
+    const confirmed = await confirm({
+      title: "Delete Plan",
+      message: `Are you sure you want to delete "${plan.name}" and all its tasks? This action cannot be undone.`,
+      confirmText: "Delete Plan",
+      variant: "destructive",
+      icon: "trash",
+    })
+
+    if (!confirmed) return
 
     try {
       await planAPI.delete(plan._id)

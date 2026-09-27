@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext.jsx"
 import { workspaceAPI, planAPI } from "../api/index.js"
 import { useToast } from "../context/ToastContext.jsx"
+import { useConfirm } from "../context/ConfirmContext.jsx"
 import { Plus, Folder, MoreVertical, Pencil, Trash2, Users, Clock, CheckCircle2, TrendingUp } from "lucide-react"
 import Button from "../components/ui/Button.jsx"
 import Input from "../components/ui/Input.jsx"
@@ -12,12 +13,13 @@ import Progress from "../components/ui/Progress.jsx"
 import Modal from "../components/ui/Modal.jsx"
 import LoadingSpinner from "../components/ui/LoadingSpinner.jsx"
 import { Dropdown, DropdownItem, DropdownSeparator } from "../components/ui/Dropdown.jsx"
-import { generateColor, formatDuration } from "../utils/helpers.js"
+import { generateColor, formatDuration, cn } from "../utils/helpers.js"
 
 function WorkspacesPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const { toast } = useToast()
+  const confirm = useConfirm()
   const [workspaces, setWorkspaces] = useState([])
   const [plans, setPlans] = useState([])
   const [loading, setLoading] = useState(true)
@@ -131,7 +133,15 @@ function WorkspacesPage() {
   }
 
   const handleDelete = async (workspace) => {
-    if (!confirm(`Delete "${workspace.name}"? This action cannot be undone.`)) return
+    const confirmed = await confirm({
+      title: "Delete Workspace",
+      message: `Are you sure you want to delete "${workspace.name}" and all associated roadmaps? This action cannot be undone.`,
+      confirmText: "Delete Workspace",
+      variant: "destructive",
+      icon: "trash",
+    })
+
+    if (!confirmed) return
 
     try {
       await workspaceAPI.delete(workspace._id)
@@ -153,14 +163,14 @@ function WorkspacesPage() {
   return (
     <div className="p-6 lg:p-8">
       {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-6 lg:mb-8 flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Workspaces</h1>
-          <p className="mt-1 text-gray-500 dark:text-gray-400">Track learning progress and roadmaps per domain</p>
+          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100">Workspaces</h1>
+          <p className="mt-1 text-xs lg:text-sm text-gray-500 dark:text-gray-400">Track learning progress and roadmaps per domain</p>
         </div>
-        <Button onClick={() => handleOpenModal()}>
-          <Plus className="mr-2 h-4 w-4" />
-          New Workspace
+        <Button onClick={() => handleOpenModal()} className="shrink-0">
+          <Plus className="mr-1.5 h-4 w-4" />
+          New
         </Button>
       </div>
 
@@ -170,12 +180,12 @@ function WorkspacesPage() {
           <CardContent className="flex flex-col items-center justify-center py-16">
             <Folder className="h-16 w-16 text-gray-300 dark:text-gray-600" />
             <h2 className="mt-4 text-xl font-semibold text-gray-900 dark:text-gray-100">No workspaces yet</h2>
-            <p className="mt-2 text-gray-500 dark:text-gray-400">
+            <p className="mt-2 text-gray-500 dark:text-gray-400 text-center max-w-sm">
               Create your first workspace to start organizing your plans
             </p>
             <Button className="mt-6" onClick={() => handleOpenModal()}>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Workspace
+              <Plus className="mr-1.5 h-4 w-4" />
+              Create
             </Button>
           </CardContent>
         </Card>
@@ -290,18 +300,24 @@ function WorkspacesPage() {
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-900 dark:text-gray-100">Color</label>
-            <div className="flex gap-2">
+          <div>
+            <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2.5">
+              Color
+            </label>
+            <div className="flex flex-wrap items-center gap-3 pt-1 pb-1">
               {["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899"].map((color) => (
                 <button
                   key={color}
                   type="button"
                   onClick={() => setFormData({ ...formData, color })}
-                  className={`h-8 w-8 rounded-full transition-transform ${
-                    formData.color === color ? "scale-110 ring-2 ring-offset-2" : ""
-                  }`}
-                  style={{ backgroundColor: color, ringColor: color }}
+                  aria-label={`Select color ${color}`}
+                  className={cn(
+                    "h-8 w-8 rounded-full transition-transform shrink-0 cursor-pointer focus:outline-none",
+                    formData.color === color 
+                      ? "scale-110 ring-2 ring-offset-2 ring-emerald-500 shadow-xs" 
+                      : "hover:scale-105 opacity-90 hover:opacity-100"
+                  )}
+                  style={{ backgroundColor: color }}
                 />
               ))}
             </div>

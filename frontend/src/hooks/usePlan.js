@@ -2,9 +2,11 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { planAPI, sectionAPI, itemAPI } from "../api/index.js"
 import { ITEM_STATUS } from "../utils/constants.js"
+import { useConfirm } from "../context/ConfirmContext.jsx"
 
 export function usePlan(planId, toast) {
   const navigate = useNavigate()
+  const confirm = useConfirm()
   const [plan, setPlan] = useState(null)
   const [sections, setSections] = useState([])
   const [items, setItems] = useState([])
@@ -199,7 +201,15 @@ export function usePlan(planId, toast) {
   }
 
   const handleDeleteSection = async (section) => {
-    if (!confirm(`Delete "${section.name}" and all its items?`)) return
+    const confirmed = await confirm({
+      title: "Delete Section",
+      message: `Are you sure you want to delete "${section.name}" and all its tasks? This action cannot be undone.`,
+      confirmText: "Delete Section",
+      variant: "destructive",
+      icon: "trash",
+    })
+
+    if (!confirmed) return
 
     try {
       await sectionAPI.delete(section._id)
@@ -309,7 +319,15 @@ export function usePlan(planId, toast) {
   }
 
   const handleDeleteItem = async (item) => {
-    if (!confirm(`Delete "${item.title}"?`)) return
+    const confirmed = await confirm({
+      title: "Delete Task",
+      message: `Are you sure you want to delete "${item.title}"? This action cannot be undone.`,
+      confirmText: "Delete Task",
+      variant: "destructive",
+      icon: "trash",
+    })
+
+    if (!confirmed) return
 
     try {
       await itemAPI.delete(item._id)

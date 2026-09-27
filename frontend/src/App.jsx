@@ -17,19 +17,14 @@ import CalendarPage from "./pages/CalendarPage.jsx"
 import FocusPage from "./pages/FocusPage.jsx"
 import SettingsPage from "./pages/SettingsPage.jsx"
 
-// Components
-import LoadingSpinner from "./components/ui/LoadingSpinner.jsx"
+import LoadingScreen from "./components/ui/LoadingScreen.jsx"
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx"
 
 function App() {
   const { loading } = useAuth()
 
   if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <LoadingSpinner size="lg" />
-      </div>
-    )
+    return <LoadingScreen message="Initializing Planner..." />
   }
 
   return (

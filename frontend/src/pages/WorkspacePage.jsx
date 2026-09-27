@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import { workspaceAPI, planAPI } from "../api/index.js"
 import { useToast } from "../context/ToastContext.jsx"
 import { useConfirm } from "../context/ConfirmContext.jsx"
-import { Plus, ArrowLeft, Folder, BookOpen, Calendar, Sun, Layers, MoreVertical, Pencil, Trash2, Archive, Bookmark, RotateCcw, Share2, FileUp, Copy } from "lucide-react"
+import { Plus, ArrowLeft, Folder, BookOpen, Calendar, Sun, Layers, MoreVertical, Pencil, Trash2, Archive, Bookmark, RotateCcw, Share2, FileUp, Copy, CheckCircle2, Clock, Sparkles } from "lucide-react"
 import Button from "../components/ui/Button.jsx"
 import Input from "../components/ui/Input.jsx"
 import { Card, CardContent } from "../components/ui/Card.jsx"
@@ -170,6 +170,12 @@ function WorkspacePage() {
     all: plans.length,
   }
 
+  // Calculate overall workspace completion and time metrics
+  const activePlans = plans.filter((p) => (p.status || "active") === "active")
+  const totalDuration = activePlans.reduce((sum, p) => sum + (p.totalDuration || 0), 0)
+  const completedDuration = activePlans.reduce((sum, p) => sum + (p.completedDuration || 0), 0)
+  const overallProgress = totalDuration > 0 ? Math.round((completedDuration / totalDuration) * 100) : 0
+
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -179,111 +185,180 @@ function WorkspacePage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      {/* Header */}
-      <div className="mb-6">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+      {/* Header Banner & Breadcrumb */}
+      <div>
         <Button variant="ghost" size="sm" className="mb-3 text-xs text-muted-foreground hover:text-foreground" onClick={() => navigate("/workspaces")}>
           <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
           Back to Workspaces
         </Button>
 
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-3.5 min-w-0">
-            <div
-              className="flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-xl shadow-xs"
-              style={{ backgroundColor: workspace?.color || "#10B981" }}
-            >
-              <Folder className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
+        {/* Hero Card / Workspace Info */}
+        <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-gradient-to-br from-white via-white to-gray-50/50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-950 p-4 sm:p-6 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-start sm:items-center gap-3.5 min-w-0">
+              <div
+                className="flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-xl shadow-xs ring-2 ring-white/20 dark:ring-white/10"
+                style={{ backgroundColor: workspace?.color || "#10B981" }}
+              >
+                <Folder className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100 truncate">{workspace?.name}</h1>
+                </div>
+                {workspace?.description && (
+                  <p className="mt-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400 line-clamp-2 max-w-2xl">{workspace.description}</p>
+                )}
+              </div>
             </div>
-            <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100 truncate">{workspace?.name}</h1>
-              {workspace?.description && (
-                <p className="mt-0.5 text-xs sm:text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{workspace.description}</p>
-              )}
+
+            {/* Quick Actions */}
+            <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setImportModalOpen(true)}
+                className="px-2.5 sm:px-3 text-xs sm:text-sm h-9"
+                title="Import Template"
+              >
+                <FileUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-600 dark:text-emerald-400 sm:mr-1.5" />
+                <span className="hidden sm:inline">Import Template</span>
+              </Button>
+              <Button
+                size="sm"
+                onClick={openCreateModal}
+                className="px-2.5 sm:px-3 text-xs sm:text-sm h-9 shadow-xs"
+                title="New Plan"
+              >
+                <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5" />
+                <span className="hidden sm:inline">New Plan</span>
+              </Button>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 shrink-0 self-start sm:self-auto">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setImportModalOpen(true)}
-              className="px-2.5 sm:px-3 text-xs sm:text-sm"
-              title="Import Template"
-            >
-              <FileUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-600 dark:text-emerald-400 sm:mr-1.5" />
-              <span className="hidden sm:inline">Import Template</span>
-            </Button>
-            <Button
-              size="sm"
-              onClick={openCreateModal}
-              className="px-2.5 sm:px-3 text-xs sm:text-sm"
-              title="New Plan"
-            >
-              <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5" />
-              <span className="hidden sm:inline">New Plan</span>
-            </Button>
-          </div>
+
+          {/* Quick Metrics Strip */}
+          {plans.length > 0 && (
+            <div className="mt-5 pt-4 border-t border-gray-100 dark:border-gray-800/80 grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                  <Layers className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Active Plans</p>
+                  <p className="text-sm sm:text-base font-bold text-foreground">{countByStatus.active}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Overall Progress</p>
+                  <p className="text-sm sm:text-base font-bold text-foreground">{overallProgress}%</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                  <Clock className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Estimated Time</p>
+                  <p className="text-sm sm:text-base font-bold text-foreground">{formatDuration(totalDuration)}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-lg bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+                  <Bookmark className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Stashed</p>
+                  <p className="text-sm sm:text-base font-bold text-foreground">{countByStatus.stashed}</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Status Filter Tabs (Active, Stashed, Archived, All) */}
-      <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto no-scrollbar border-b border-gray-200 dark:border-gray-800 pb-2 mb-6">
-        {[
-          { key: "active", label: "Active", count: countByStatus.active },
-          { key: "stashed", label: "Stashed", count: countByStatus.stashed, icon: Bookmark },
-          { key: "archived", label: "Archived", count: countByStatus.archived, icon: Archive },
-          { key: "all", label: "All Plans", shortLabel: "All", count: countByStatus.all },
-        ].map((tab) => {
-          const Icon = tab.icon
-          const isActive = statusFilter === tab.key
-          return (
-            <button
-              key={tab.key}
-              onClick={() => setStatusFilter(tab.key)}
-              className={`flex items-center gap-1 sm:gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all shrink-0 ${
-                isActive
-                  ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 font-semibold"
-                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
-              }`}
-            >
-              {Icon && <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />}
-              <span>{tab.shortLabel ? <><span className="hidden sm:inline">{tab.label}</span><span className="sm:hidden">{tab.shortLabel}</span></> : tab.label}</span>
-              <span className={`text-[10px] sm:text-xs px-1.5 py-0.2 rounded-full font-medium ${
-                isActive 
-                  ? "bg-emerald-200/60 dark:bg-emerald-800/60 text-emerald-800 dark:text-emerald-200" 
-                  : "bg-gray-200/60 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
-              }`}>
-                {tab.count}
-              </span>
-            </button>
-          )
-        })}
+      <div className="flex items-center justify-between gap-2 border-b border-gray-200 dark:border-gray-800 pb-2">
+        <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar">
+          {[
+            { key: "active", label: "Active Plans", shortLabel: "Active", count: countByStatus.active },
+            { key: "stashed", label: "Stashed", shortLabel: "Stashed", count: countByStatus.stashed, icon: Bookmark },
+            { key: "archived", label: "Archived", shortLabel: "Archived", count: countByStatus.archived, icon: Archive },
+            { key: "all", label: "All Plans", shortLabel: "All", count: countByStatus.all },
+          ].map((tab) => {
+            const Icon = tab.icon
+            const isActive = statusFilter === tab.key
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setStatusFilter(tab.key)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all shrink-0 ${
+                  isActive
+                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 font-semibold shadow-2xs"
+                    : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/60"
+                }`}
+              >
+                {Icon && <Icon className="h-3.5 w-3.5" />}
+                <span>
+                  <span className="hidden sm:inline">{tab.label}</span>
+                  <span className="sm:hidden">{tab.shortLabel}</span>
+                </span>
+                <span className={`text-[10px] sm:text-xs px-1.5 py-0.2 rounded-full font-medium ${
+                  isActive 
+                    ? "bg-emerald-200/70 dark:bg-emerald-800/70 text-emerald-800 dark:text-emerald-200" 
+                    : "bg-gray-200/60 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+                }`}>
+                  {tab.count}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+
+        <div className="hidden sm:flex items-center text-xs text-muted-foreground">
+          {filteredPlans.length} {filteredPlans.length === 1 ? "plan" : "plans"}
+        </div>
       </div>
 
       {/* Plans Grid */}
       {filteredPlans.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-16">
-            <Layers className="h-16 w-16 text-gray-300 dark:text-gray-600" />
-            <h2 className="mt-4 text-xl font-semibold text-gray-900 dark:text-gray-100">
+        <Card className="border-dashed border-2">
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="h-16 w-16 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+              <Layers className="h-8 w-8 text-gray-400 dark:text-gray-500" />
+            </div>
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">
               {statusFilter === "stashed" 
                 ? "No stashed plans" 
                 : statusFilter === "archived" 
                 ? "No archived plans" 
                 : "No plans yet"}
             </h2>
-            <p className="mt-2 text-gray-500 dark:text-gray-400">
+            <p className="mt-1.5 text-xs sm:text-sm text-gray-500 dark:text-gray-400 max-w-sm">
               {statusFilter === "stashed"
-                ? "Plans you stash for future reference or pause will appear here"
+                ? "Plans you stash for future reference or pause will appear here."
                 : statusFilter === "archived"
-                ? "Completed or closed plans you archive will appear here"
-                : "Create your first plan to start organizing your work"}
+                ? "Completed or closed plans you archive will appear here."
+                : "Create your first plan or import a template to start organizing your work."}
             </p>
             {statusFilter === "active" && (
-              <Button className="mt-6" onClick={openCreateModal}>
-                <Plus className="mr-2 h-4 w-4" />
-                Create Plan
-              </Button>
+              <div className="mt-6 flex items-center gap-2">
+                <Button size="sm" onClick={openCreateModal}>
+                  <Plus className="mr-1.5 h-4 w-4" />
+                  Create Plan
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setImportModalOpen(true)}>
+                  <FileUp className="mr-1.5 h-4 w-4" />
+                  Import
+                </Button>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -293,106 +368,125 @@ function WorkspacePage() {
             const Icon = PLAN_TYPE_ICONS[plan.type] || Layers
             const typeConfig = PLAN_TYPE_LABELS[plan.type] || {}
             const currentStatus = plan.status || "active"
+            const planColor = plan.color || typeConfig.color || "#10B981"
 
             return (
               <Card 
                 key={plan._id} 
                 onClick={() => navigate(`/plans/${plan._id}`)}
-                className="cursor-pointer transition-all duration-200 hover:shadow-md hover:border-emerald-500/30 active:scale-[0.99]"
+                className="group cursor-pointer transition-all duration-200 hover:shadow-md hover:border-emerald-500/40 active:scale-[0.99] border-border/80 flex flex-col justify-between"
               >
-                <CardContent className="p-5">
-                  <div className="flex items-start justify-between">
-                    <div
-                      className="flex h-10 w-10 items-center justify-center rounded-lg shadow-xs"
-                      style={{ backgroundColor: plan.color || typeConfig.color }}
-                    >
-                      <Icon className="h-5 w-5 text-white" />
-                    </div>
-                    <div onClick={(e) => e.stopPropagation()}>
-                      <Dropdown
-                        trigger={
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        }
-                        align="right"
-                      >
-                        <DropdownItem onClick={() => navigate(`/plans/${plan._id}`)}>
-                          <Pencil className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownItem>
-                        <DropdownItem onClick={async () => {
-                          try {
-                            const res = await planAPI.getTemplate(plan._id)
-                            const cleanTemplate = res.data?.data || res.data
-                            await navigator.clipboard.writeText(JSON.stringify(cleanTemplate, null, 2))
-                            toast.success("Fresh template JSON copied to clipboard!")
-                          } catch {
-                            toast.error("Failed to copy template JSON")
-                          }
-                        }}>
-                          <Share2 className="mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                          Share Template
-                        </DropdownItem>
-                        
-                        <DropdownSeparator />
-                        {currentStatus === "active" ? (
-                          <>
-                            <DropdownItem onClick={() => handleUpdatePlanStatus(plan._id, "stashed")}>
-                              <Bookmark className="mr-2 h-4 w-4 text-purple-500" />
-                              Stash for later
-                            </DropdownItem>
-                            <DropdownItem onClick={() => handleUpdatePlanStatus(plan._id, "archived")}>
-                              <Archive className="mr-2 h-4 w-4 text-amber-500" />
-                              Archive plan
-                            </DropdownItem>
-                          </>
-                        ) : (
-                          <DropdownItem onClick={() => handleUpdatePlanStatus(plan._id, "active")}>
-                            <RotateCcw className="mr-2 h-4 w-4 text-emerald-600" />
-                            Restore to Active
-                          </DropdownItem>
+                <CardContent className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
+                  <div>
+                    {/* Top Row: Icon + Type Badge + Menu */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div
+                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-2xs group-hover:scale-105 transition-transform duration-200"
+                          style={{ backgroundColor: planColor }}
+                        >
+                          <Icon className="h-5 w-5 text-white" />
+                        </div>
+                        <div className="min-w-0">
+                          <span className="inline-block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                            {typeConfig.label || plan.type}
+                          </span>
+                          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                            {plan.name}
+                          </h3>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                        {currentStatus === "stashed" && (
+                          <Badge variant="secondary" className="bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 text-[10px] px-1.5 py-0">
+                            Stashed
+                          </Badge>
+                        )}
+                        {currentStatus === "archived" && (
+                          <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 text-[10px] px-1.5 py-0">
+                            Archived
+                          </Badge>
                         )}
 
-                        <DropdownSeparator />
-                        <DropdownItem onClick={() => handleDeletePlan(plan)} destructive>
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownItem>
-                      </Dropdown>
+                        <Dropdown
+                          trigger={
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          }
+                          align="right"
+                        >
+                          <DropdownItem onClick={() => navigate(`/plans/${plan._id}`)}>
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Open Plan
+                          </DropdownItem>
+                          <DropdownItem onClick={async () => {
+                            try {
+                              const res = await planAPI.getTemplate(plan._id)
+                              const cleanTemplate = res.data?.data || res.data
+                              await navigator.clipboard.writeText(JSON.stringify(cleanTemplate, null, 2))
+                              toast.success("Fresh template JSON copied to clipboard!")
+                            } catch {
+                              toast.error("Failed to copy template JSON")
+                            }
+                          }}>
+                            <Share2 className="mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                            Share Template
+                          </DropdownItem>
+                          
+                          <DropdownSeparator />
+                          {currentStatus === "active" ? (
+                            <>
+                              <DropdownItem onClick={() => handleUpdatePlanStatus(plan._id, "stashed")}>
+                                <Bookmark className="mr-2 h-4 w-4 text-purple-500" />
+                                Stash for later
+                              </DropdownItem>
+                              <DropdownItem onClick={() => handleUpdatePlanStatus(plan._id, "archived")}>
+                                <Archive className="mr-2 h-4 w-4 text-amber-500" />
+                                Archive plan
+                              </DropdownItem>
+                            </>
+                          ) : (
+                            <DropdownItem onClick={() => handleUpdatePlanStatus(plan._id, "active")}>
+                              <RotateCcw className="mr-2 h-4 w-4 text-emerald-600" />
+                              Restore to Active
+                            </DropdownItem>
+                          )}
+
+                          <DropdownSeparator />
+                          <DropdownItem onClick={() => handleDeletePlan(plan)} destructive>
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownItem>
+                        </Dropdown>
+                      </div>
                     </div>
+
+                    {plan.description && (
+                      <p className="mt-2 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
+                        {plan.description}
+                      </p>
+                    )}
                   </div>
 
-                  <div className="mt-4">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 flex-1 truncate">{plan.name}</h3>
-                      {currentStatus === "stashed" && (
-                        <Badge variant="secondary" className="bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 text-xs">
-                          Stashed
-                        </Badge>
-                      )}
-                      {currentStatus === "archived" && (
-                        <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 text-xs">
-                          Archived
-                        </Badge>
-                      )}
-                    </div>
-                    <Badge variant="secondary" className="mt-1.5 text-xs">
-                      {typeConfig.label || plan.type}
-                    </Badge>
-                  </div>
-
-                  <div className="mt-3.5">
-                    <div className="flex items-center justify-between text-xs mb-1">
+                  {/* Progress & Duration Section */}
+                  <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
+                    <div className="flex items-center justify-between text-xs mb-1.5">
                       <span className="text-gray-500 dark:text-gray-400 font-medium">Progress</span>
-                      <span className="font-semibold text-gray-900 dark:text-gray-100">{plan.progress || 0}%</span>
+                      <span className="font-bold text-gray-900 dark:text-gray-100">{plan.progress || 0}%</span>
                     </div>
                     <Progress value={plan.progress || 0} className="h-1.5" />
-                  </div>
 
-                  <div className="mt-3 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-2 border-t border-gray-100 dark:border-gray-800">
-                    <span>{formatDuration(plan.totalDuration)}</span>
-                    <span>{formatDuration(plan.completedDuration)} completed</span>
+                    <div className="mt-2.5 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3 text-muted-foreground" />
+                        {formatDuration(plan.totalDuration)}
+                      </span>
+                      <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                        {formatDuration(plan.completedDuration)} done
+                      </span>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

@@ -23,30 +23,36 @@ function SectionModal({
       title={editingSection ? "Edit Section" : "Add Section"}
     >
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Name *</label>
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold text-foreground tracking-wide uppercase">
+            Section Name <span className="text-red-500">*</span>
+          </label>
           <Input
             value={form.name}
             onChange={(e) => onChange({ ...form, name: e.target.value })}
-            placeholder="Section name"
+            placeholder="e.g. Phase 1: Fundamentals, Core Architecture"
             required
             autoFocus
+            className="h-10 text-sm bg-accent/30 focus:bg-background"
           />
         </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Description</label>
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold text-foreground tracking-wide uppercase">
+            Description
+          </label>
           <textarea
             value={form.description}
             onChange={(e) => onChange({ ...form, description: e.target.value })}
-            placeholder="Optional description"
-            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            placeholder="Optional context or milestone goals for this section..."
+            rows={3}
+            className="w-full rounded-lg border border-input bg-accent/30 focus:bg-background p-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
           />
         </div>
-        <div className="flex justify-end gap-3 pt-4">
-          <Button type="button" variant="outline" onClick={onClose}>
+        <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-border/60">
+          <Button type="button" variant="outline" size="sm" onClick={onClose} className="px-4">
             Cancel
           </Button>
-          <Button type="submit" loading={submitting}>
+          <Button type="submit" size="sm" loading={submitting} className="px-5 shadow-xs">
             {editingSection ? "Update Section" : "Create Section"}
           </Button>
         </div>

@@ -66,17 +66,8 @@ function PlanSections({
 
                   <div className="ml-2 flex items-center gap-2">
                     <Badge variant="secondary">
-                      {sectionItems.length} items
+                      {sectionItems.length} {sectionItems.length === 1 ? "item" : "items"}
                     </Badge>
-
-                    {sectionItems.length > 0 && (
-                      <Badge
-                        variant="outline"
-                        className="bg-primary/10 text-primary"
-                      >
-                        {progress}% complete
-                      </Badge>
-                    )}
                   </div>
                 </div>
 

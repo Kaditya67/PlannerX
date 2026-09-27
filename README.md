@@ -1,28 +1,44 @@
 # PlannerX
 
-> A modern, scenario-driven planning and productivity system built for professionals and teams. Streamline project execution, organize hierarchical plans with sections and tasks, run customizable focus sessions, track calendar milestones, and manage workflows seamlessly.
+> A modern, scenario-driven planning and productivity system built for professionals and teams. Streamline project execution, organize hierarchical plans with sections and tasks, run customizable focus sessions, share pristine roadmap templates, and manage multi-tier roles seamlessly.
 
 ---
 
 ## ✨ Features
 
-- **Workspaces & Collaboration**: Organize plans into distinct workspaces (Engineering, Design, Operations, Personal). Full card interactivity with quick action menus.
-- **Hierarchical Plans & Sections**:
-  - Plans with section-based task breakdown.
-  - Lifecycle management: **Active**, **Stashed** (temporary hold), and **Archived** (historical) states with instant restore and filter tabs.
-  - Multi-tier progress calculation and time estimates.
+- **Workspaces & Collaboration**:
+  - Organize plans into distinct workspaces (Engineering, Design, Operations, Personal).
+  - Quick action menus, plan filtering by status (**Active**, **Stashed**, **Archived**), and clean collapsible metrics strips.
+
+- **Hierarchical Plans, Sections & Tasks**:
+  - Structured roadmap breakdown with collapsible sections and general unsectioned tasks.
+  - Multi-tier real-time completion tracking and estimated duration analytics.
+  - Flexible lifecycle management: stash plans on hold or archive historical goals with instant 1-click restore.
+
+- **Pristine Template Export & Import**:
+  - Share roadmaps as clean, reusable JSON templates with all checkboxes and session logs automatically reset to 0% fresh states.
+  - 1-click Import Template tool to generate fresh plans in any workspace immediately.
+
 - **Deep Focus Mode**:
-  - Built-in Pomodoro, Deep Work, and Sprint intervals.
-  - Fully customizable work and break durations directly from the Focus view or Settings page.
-  - Auto-tracked active sessions linked to selected tasks.
-  - Resilient timer state persisted with localStorage sync.
+  - Built-in Pomodoro, Deep Work, and Custom interval timers.
+  - Real-time task selector linked directly to active roadmap items.
+  - Resilient timer state with localStorage background preservation.
+
 - **Compact Calendar & Activity Stream**:
   - Space-efficient mini-calendar date picker.
-  - Daily session activity stream showing completed focus blocks and time spent.
+  - Activity feed logging completed focus blocks and time spent per day.
+
+- **Admin & Role Management Portal (`/admin`)**:
+  - **Stealth Access**: Hidden from public menus, accessible exclusively via direct URL navigation for authorized administrators.
+  - **Multi-Tier Hierarchy**: `DevAdmin` (Primary Owner), `Admin`, `Manager` (Middle Access), and `User`.
+  - **User Inspector**: Real-time modal view of any user's workspaces, roadmap completion percentages, and focus session stats.
+  - **Account Controls**: Instant account activation, suspension (blocking), customizable suspension reason messages, and data wipe capabilities.
+  - **1-Day Ephemeral Demo User**: 1-Click demo sandbox access that safely resets experimental changes daily without locking credentials.
+
 - **Clean SaaS UI / UX**:
-  - Professional typography and high-contrast tokens.
-  - Built-in **Light & Dark mode** with custom OKLCH color palettes.
-  - Collapsible desktop sidebar and fluid mobile drawer navigation.
+  - Professional typography, accessible micro-interactions, and high-contrast design tokens.
+  - Built-in **Light & Dark Mode** with custom OKLCH color palettes.
+  - Collapsible desktop sidebar and fluid responsive mobile drawer navigation.
 
 ---
 
@@ -109,8 +125,8 @@ The client will be running on `http://localhost:5173`.
 PlannerX/
 ├── backend/
 │   ├── config/          # Database connection, seeders, environment
-│   ├── controllers/     # API request handlers (plans, workspaces, items, sessions, auth)
-│   ├── middleware/      # Auth verification, error handling, rate limiting
+│   ├── controllers/     # API request handlers (plans, workspaces, items, sessions, auth, admin)
+│   ├── middlewares/     # Auth verification, admin guard, error handling, rate limiting
 │   ├── models/          # Mongoose data schemas (User, Workspace, Plan, Section, Item, Session)
 │   ├── routes/          # Express route definitions
 │   └── server.js        # Server entry point
@@ -119,10 +135,10 @@ PlannerX/
 │   ├── src/
 │   │   ├── api/         # Axios API clients for backend endpoints
 │   │   ├── components/  # Reusable UI components, modals, headers, progress bars
-│   │   ├── context/     # React Contexts (AuthContext, ThemeContext, ToastContext)
+│   │   ├── context/     # React Contexts (AuthContext, ThemeContext, ToastContext, ConfirmContext)
 │   │   ├── hooks/       # Custom React hooks (usePlan, useLocalStorage)
 │   │   ├── layouts/     # MainLayout (with collapsible sidebar) & AuthLayout
-│   │   ├── pages/       # Route views (Dashboard, Workspaces, Calendar, Focus, Settings)
+│   │   ├── pages/       # Route views (Dashboard, Workspaces, PlanPage, Calendar, Focus, Settings, AdminPage)
 │   │   ├── utils/       # Formatters, helpers, and constant dictionaries
 │   │   ├── App.jsx      # Route tree definition
 │   │   ├── index.css    # Tailwind CSS v4 design tokens and theme palettes

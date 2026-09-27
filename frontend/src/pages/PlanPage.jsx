@@ -15,7 +15,7 @@ import SectionModal from "../components/SectionModal.jsx"
 import ItemModal from "../components/ItemModal.jsx"
 import SmartEditor from "../components/SmartEditor.jsx"
 import { usePlan } from "../hooks/usePlan.js"
-import { formatDuration, generateColor } from "../utils/helpers.js"
+import { formatDuration, generateColor,cn } from "../utils/helpers.js"
 import { PLAN_TYPES, PLAN_TYPE_LABELS } from "../utils/constants.js"
 
 const PLAN_TYPE_ICONS = {

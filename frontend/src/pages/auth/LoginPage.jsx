@@ -25,7 +25,7 @@ function LoginPage() {
       const loggedUser = await login({ email, password })
       toast.success("Welcome back!")
       const targetPath =
-        from && from !== "/dashboard" && from !== "/"
+        from && from !== "/dashboard" && from !== "/" && from !== "/admin"
           ? from
           : loggedUser?.preferences?.defaultTab
           ? `/${loggedUser.preferences.defaultTab}`
@@ -123,7 +123,7 @@ function LoginPage() {
                   const loggedUser = await demoLogin()
                   toast.success("Logged in as Demo User!")
                   const targetPath =
-                    from && from !== "/dashboard" && from !== "/"
+                    from && from !== "/dashboard" && from !== "/" && from !== "/admin"
                       ? from
                       : loggedUser?.preferences?.defaultTab
                       ? `/${loggedUser.preferences.defaultTab}`

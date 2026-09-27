@@ -9,7 +9,7 @@ function AdminRoute({ children }) {
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
-  if (user.role !== "admin") {
+  if (user.role !== "admin" && user.role !== "devadmin") {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-background">
         <div className="max-w-md w-full text-center space-y-4 rounded-2xl border border-border bg-card p-8 shadow-lg">

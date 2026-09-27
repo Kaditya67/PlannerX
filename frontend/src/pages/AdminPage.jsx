@@ -286,8 +286,9 @@ function AdminPage() {
                   <Users className="h-5 w-5" />
                 </div>
               </div>
-              <div className="mt-3 pt-3 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
+              <div className="mt-3 pt-3 border-t border-border flex flex-wrap items-center justify-between gap-1 text-[11px] text-muted-foreground">
                 <span>{stats.users?.admins || 0} Admins</span>
+                <span>{stats.users?.managers || 0} Managers</span>
                 <span>{stats.users?.standard || 0} Standard</span>
               </div>
             </CardContent>
@@ -388,7 +389,9 @@ function AdminPage() {
                 className="h-8 rounded-lg border border-border bg-card px-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               >
                 <option value="all">All Roles</option>
+                <option value="devadmin">DevAdmin</option>
                 <option value="admin">Admins</option>
+                <option value="manager">Managers</option>
                 <option value="user">Users</option>
               </select>
 
@@ -472,9 +475,17 @@ function AdminPage() {
                         </td>
 
                         <td className="py-3 px-3">
-                          {u.role === "admin" ? (
+                          {u.role === "devadmin" ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-800">
+                              <Shield className="h-3 w-3" /> DevAdmin
+                            </span>
+                          ) : u.role === "admin" ? (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300">
                               <Shield className="h-3 w-3" /> Admin
+                            </span>
+                          ) : u.role === "manager" ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300">
+                              <Sparkles className="h-3 w-3" /> Manager
                             </span>
                           ) : (
                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-secondary text-secondary-foreground">
@@ -786,16 +797,25 @@ function AdminPage() {
             </label>
             <select
               value={editForm.role}
-              disabled={String(selectedUser?._id) === String(user?._id)}
+              disabled={String(selectedUser?._id) === String(user?._id) && user?.role !== "devadmin"}
               onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
               className="w-full h-9 rounded-lg border border-input bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
             >
               <option value="user">Standard User</option>
+              <option value="manager">Manager (Middle Access)</option>
               <option value="admin">System Administrator</option>
+              {(user?.role === "devadmin" || user?.email === "ojhaaditya913@gmail.com") && (
+                <option value="devadmin">DevAdmin (Primary Owner)</option>
+              )}
             </select>
-            {String(selectedUser?._id) === String(user?._id) && (
+            {String(selectedUser?._id) === String(user?._id) && user?.role !== "devadmin" && (
               <p className="text-[11px] text-muted-foreground mt-1">
-                You cannot modify your own administrator role.
+                Only the DevAdmin can modify administrator roles.
+              </p>
+            )}
+            {user?.role === "devadmin" && String(selectedUser?._id) === String(user?._id) && (
+              <p className="text-[11px] text-purple-600 dark:text-purple-400 mt-1 font-medium">
+                ⚡ DevAdmin: You can test and switch between DevAdmin, Admin, and Manager roles anytime.
               </p>
             )}
           </div>

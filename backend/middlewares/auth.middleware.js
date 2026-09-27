@@ -69,7 +69,7 @@ export const optionalAuth = asyncHandler(async (req, res, next) => {
 })
 
 export const admin = (req, res, next) => {
-  if (req.user && req.user.role === "admin") {
+  if (req.user && (req.user.role === "admin" || req.user.role === "devadmin")) {
     next()
   } else {
     res.status(403)

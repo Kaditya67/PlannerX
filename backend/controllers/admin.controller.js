@@ -16,14 +16,18 @@ export const getSystemStats = asyncHandler(async (req, res) => {
 
   const [
     totalUsers,
+    devAdminUsers,
     adminUsers,
+    managerUsers,
     totalWorkspaces,
     totalPlans,
     totalItems,
     totalSessions,
   ] = await Promise.all([
     User.countDocuments({ isDeleted: false }),
+    User.countDocuments({ role: "devadmin", isDeleted: false }),
     User.countDocuments({ role: "admin", isDeleted: false }),
+    User.countDocuments({ role: "manager", isDeleted: false }),
     Workspace.countDocuments({ isDeleted: false }),
     Plan.countDocuments({ isDeleted: false }),
     Item.countDocuments({ isDeleted: false }),
@@ -42,7 +46,13 @@ export const getSystemStats = asyncHandler(async (req, res) => {
     new ApiResponse(
       200,
       {
-        users: { total: totalUsers, admins: adminUsers, standard: totalUsers - adminUsers },
+        users: {
+          total: totalUsers,
+          devAdmins: devAdminUsers,
+          admins: adminUsers,
+          managers: managerUsers,
+          standard: totalUsers - (devAdminUsers + adminUsers + managerUsers),
+        },
         workspaces: totalWorkspaces,
         plans: { total: totalPlans, active: activePlans, stashed: stashedPlans, archived: archivedPlans },
         items: { total: totalItems, completed: completedItems },
@@ -120,15 +130,18 @@ export const updateUserByAdmin = asyncHandler(async (req, res) => {
     throw new Error("User not found")
   }
 
-  // Prevent admin from removing their own admin role or suspending themselves
-  if (String(user._id) === String(req.user._id)) {
-    if (role && role !== "admin") {
+  const isDevAdmin = req.user.role === "devadmin" || req.user.email === "ojhaaditya913@gmail.com"
+  const isEditingSelf = String(user._id) === String(req.user._id)
+
+  // Prevent non-devadmin from editing self role or suspending self
+  if (isEditingSelf && !isDevAdmin) {
+    if (role && role !== user.role) {
       res.status(400)
-      throw new Error("Cannot remove your own admin privileges")
+      throw new Error("Cannot change your own role unless you are DevAdmin")
     }
     if (status && status !== "active") {
       res.status(400)
-      throw new Error("Cannot suspend your own administrator account")
+      throw new Error("Cannot suspend your own account")
     }
   }
 
@@ -139,7 +152,14 @@ export const updateUserByAdmin = asyncHandler(async (req, res) => {
   }
 
   if (name) user.name = name
-  if (role && ["user", "admin"].includes(role)) user.role = role
+  if (role && ["user", "manager", "admin", "devadmin"].includes(role)) {
+    // Only devadmin can assign the devadmin or admin role
+    if ((role === "admin" || role === "devadmin") && !isDevAdmin) {
+      res.status(403)
+      throw new Error("Only the primary DevAdmin can grant administrator roles")
+    }
+    user.role = role
+  }
   if (dailyCapacity !== undefined) user.dailyCapacity = Number(dailyCapacity) || 480
   if (status && ["active", "suspended", "deactivated"].includes(status)) {
     user.status = status

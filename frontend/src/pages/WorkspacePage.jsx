@@ -13,7 +13,7 @@ import Modal from "../components/ui/Modal.jsx"
 import LoadingSpinner from "../components/ui/LoadingSpinner.jsx"
 import { Dropdown, DropdownItem, DropdownSeparator } from "../components/ui/Dropdown.jsx"
 import { PLAN_TYPES, PLAN_TYPE_LABELS } from "../utils/constants.js"
-import { formatDuration, generateColor } from "../utils/helpers.js"
+import { formatDuration, generateColor, cn } from "../utils/helpers.js"
 
 const PLAN_TYPE_ICONS = {
   project: Folder,
@@ -217,7 +217,7 @@ function WorkspacePage() {
             </div>
 
             {/* Quick Actions */}
-            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 self-start sm:self-auto">
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 self-end sm:self-auto">
               {plans.length > 0 && (
                 <Button
                   variant={showStats ? "secondary" : "ghost"}

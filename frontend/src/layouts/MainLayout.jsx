@@ -248,12 +248,12 @@ function MainLayout() {
                     {isDark ? (
                       <>
                         <Sun className="h-4 w-4 text-amber-500" />
-                        Switch to Light Mode
+                        Light Mode
                       </>
                     ) : (
                       <>
                         <Moon className="h-4 w-4 text-blue-500" />
-                        Switch to Dark Mode
+                        Dark Mode
                       </>
                     )}
                   </button>

@@ -685,7 +685,7 @@ function FocusPage() {
                 <select
                   value={taskPlanFilter}
                   onChange={(e) => setTaskPlanFilter(e.target.value)}
-                  className="h-8 rounded-lg border border-border bg-card px-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary shrink-0"
+                  className="h-8 w-full sm:w-auto max-w-full rounded-lg border border-border bg-card px-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary truncate shrink-0"
                 >
                   <option value="ALL">All Plans</option>
                   {plans.map((p) => (

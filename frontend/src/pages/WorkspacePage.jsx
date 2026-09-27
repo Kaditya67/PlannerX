@@ -202,23 +202,32 @@ function WorkspacePage() {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
-            <Button variant="outline" size="sm" onClick={() => setImportModalOpen(true)}>
-              <FileUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400 sm:mr-1.5" />
+          <div className="flex items-center gap-1.5 shrink-0 self-start sm:self-auto">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setImportModalOpen(true)}
+              className="px-2.5 sm:px-3 text-xs sm:text-sm"
+              title="Import Template"
+            >
+              <FileUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-600 dark:text-emerald-400 sm:mr-1.5" />
               <span className="hidden sm:inline">Import Template</span>
-              <span className="sm:hidden">Import</span>
             </Button>
-            <Button size="sm" onClick={openCreateModal}>
-              <Plus className="h-4 w-4 sm:mr-1.5" />
+            <Button
+              size="sm"
+              onClick={openCreateModal}
+              className="px-2.5 sm:px-3 text-xs sm:text-sm"
+              title="New Plan"
+            >
+              <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5" />
               <span className="hidden sm:inline">New Plan</span>
-              <span className="sm:hidden">New</span>
             </Button>
           </div>
         </div>
       </div>
 
       {/* Status Filter Tabs (Active, Stashed, Archived, All) */}
-      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar border-b border-gray-200 dark:border-gray-800 pb-2.5 mb-6">
+      <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto no-scrollbar border-b border-gray-200 dark:border-gray-800 pb-2 mb-6">
         {[
           { key: "active", label: "Active", count: countByStatus.active },
           { key: "stashed", label: "Stashed", count: countByStatus.stashed, icon: Bookmark },
@@ -231,15 +240,15 @@ function WorkspacePage() {
             <button
               key={tab.key}
               onClick={() => setStatusFilter(tab.key)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all shrink-0 ${
+              className={`flex items-center gap-1 sm:gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all shrink-0 ${
                 isActive
                   ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 font-semibold"
                   : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
               }`}
             >
-              {Icon && <Icon className="h-3.5 w-3.5" />}
+              {Icon && <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />}
               <span>{tab.shortLabel ? <><span className="hidden sm:inline">{tab.label}</span><span className="sm:hidden">{tab.shortLabel}</span></> : tab.label}</span>
-              <span className={`text-[11px] px-1.5 py-0.2 rounded-full font-medium ${
+              <span className={`text-[10px] sm:text-xs px-1.5 py-0.2 rounded-full font-medium ${
                 isActive 
                   ? "bg-emerald-200/60 dark:bg-emerald-800/60 text-emerald-800 dark:text-emerald-200" 
                   : "bg-gray-200/60 dark:bg-gray-800 text-gray-600 dark:text-gray-400"

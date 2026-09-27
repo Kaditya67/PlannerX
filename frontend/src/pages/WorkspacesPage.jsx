@@ -159,9 +159,8 @@ function WorkspacesPage() {
           <p className="mt-1 text-xs lg:text-sm text-gray-500 dark:text-gray-400">Track learning progress and roadmaps per domain</p>
         </div>
         <Button onClick={() => handleOpenModal()} className="shrink-0">
-          <Plus className="h-4 w-4 sm:mr-1.5" />
-          <span className="hidden sm:inline">New Workspace</span>
-          <span className="sm:hidden">New</span>
+          <Plus className="mr-1.5 h-4 w-4" />
+          New
         </Button>
       </div>
 
@@ -175,8 +174,8 @@ function WorkspacesPage() {
               Create your first workspace to start organizing your plans
             </p>
             <Button className="mt-6" onClick={() => handleOpenModal()}>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Workspace
+              <Plus className="mr-1.5 h-4 w-4" />
+              Create
             </Button>
           </CardContent>
         </Card>

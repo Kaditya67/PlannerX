@@ -180,3 +180,35 @@ export const updatePassword = asyncHandler(async (req, res) => {
 
   sendTokenResponse(user, 200, res)
 })
+
+// @desc    1-Click Demo Login (Auto-finds or provisions Demo User)
+// @route   POST /api/auth/demo
+// @access  Public
+export const demoLogin = asyncHandler(async (req, res) => {
+  await connectDB()
+
+  const demoEmail = "demo@planner.com"
+  const demoPassword = "password123"
+
+  let user = await User.findOne({ email: demoEmail, isDeleted: false }).select("+password")
+
+  if (!user) {
+    user = await User.create({
+      name: "Demo User",
+      email: demoEmail,
+      password: demoPassword,
+    })
+
+    // Ensure default personal workspace
+    await Workspace.create({
+      name: "Personal",
+      description: "Default personal workspace",
+      color: "#10B981",
+      icon: "folder",
+      owner: user._id,
+      members: [],
+    })
+  }
+
+  sendTokenResponse(user, 200, res)
+})

@@ -29,11 +29,14 @@ apiClient.interceptors.response.use(
   (error) => {
     const message = error.response?.data?.message || error.message || "An error occurred"
 
-    // Handle unauthorized
+    // Handle unauthorized - only redirect if not already on auth page
     if (error.response?.status === 401) {
       localStorage.removeItem("token")
       localStorage.removeItem("user")
-      window.location.href = "/login"
+      const currentPath = window.location.pathname
+      if (currentPath !== "/login" && currentPath !== "/register" && currentPath !== "/forgot-password") {
+        window.location.href = "/login"
+      }
     }
 
     return Promise.reject(new Error(message))

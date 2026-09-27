@@ -3,6 +3,8 @@ import apiClient from "./client.js"
 export const authAPI = {
   login: (credentials) => apiClient.post("/auth/login", credentials),
 
+  demoLogin: () => apiClient.post("/auth/demo"),
+
   register: (userData) => apiClient.post("/auth/register", userData),
 
   logout: () => apiClient.post("/auth/logout"),

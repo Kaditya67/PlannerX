@@ -10,7 +10,7 @@ function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
-  const { login, register } = useAuth()
+  const { login, demoLogin, register } = useAuth()
   const { toast } = useToast()
   const navigate = useNavigate()
   const location = useLocation()
@@ -113,27 +113,24 @@ function LoginPage() {
             <Button
               type="button"
               variant="outline"
-              className="w-full py-2.5 border-dashed border-emerald-500/50 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300"
+              className="w-full py-2.5 border-dashed border-emerald-500/50 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300 font-medium"
               disabled={loading}
               onClick={async () => {
-                const demoEmail = "demo@planner.local"
-                const demoPassword = "password123"
-                setEmail(demoEmail)
-                setPassword(demoPassword)
+                setEmail("demo@planner.com")
+                setPassword("password123")
                 setLoading(true)
                 try {
-                  await login({ email: demoEmail, password: demoPassword })
+                  const loggedUser = await demoLogin()
                   toast.success("Logged in as Demo User!")
-                  window.location.href = from
+                  const targetPath =
+                    from && from !== "/dashboard" && from !== "/"
+                      ? from
+                      : loggedUser?.preferences?.defaultTab
+                      ? `/${loggedUser.preferences.defaultTab}`
+                      : "/dashboard"
+                  window.location.href = targetPath
                 } catch (err) {
-                  // If user doesn't exist yet, register demo user
-                  try {
-                    await register({ name: "Demo User", email: demoEmail, password: demoPassword })
-                    toast.success("Demo account created and logged in!")
-                    window.location.href = from
-                  } catch (regErr) {
-                    toast.error(regErr.message || err.message || "Failed to log in with demo account")
-                  }
+                  toast.error(err.message || "Failed to log in with demo account")
                 } finally {
                   setLoading(false)
                 }

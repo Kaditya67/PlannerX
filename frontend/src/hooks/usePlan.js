@@ -152,9 +152,10 @@ export function usePlan(planId, toast) {
   }
 
   const openSectionModal = (section = null) => {
-    if (section) {
+    // Check if section is a valid section object (and not a DOM click event or empty)
+    if (section && typeof section === "object" && (section._id || section.name)) {
       setEditingSection(section)
-      setSectionForm({ name: section.name, description: section.description || "" })
+      setSectionForm({ name: section.name || "", description: section.description || "" })
     } else {
       setEditingSection(null)
       setSectionForm({ name: "", description: "" })
@@ -213,7 +214,7 @@ export function usePlan(planId, toast) {
   }
 
   const openItemModal = (item = null, sectionId = null) => {
-    if (item) {
+    if (item && typeof item === "object" && (item._id || item.title)) {
       setEditingItem(item)
       setItemForm({
         title: item.title,
@@ -225,7 +226,7 @@ export function usePlan(planId, toast) {
     } else {
       setEditingItem(null)
       setItemForm({ title: "", description: "", priority: "medium", plannedDuration: 60 })
-      setCurrentSectionId(sectionId)
+      setCurrentSectionId(typeof sectionId === "string" ? sectionId : null)
     }
     setItemModalOpen(true)
   }

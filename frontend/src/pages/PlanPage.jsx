@@ -241,13 +241,13 @@ function PlanPage() {
         items={items}
         collapsedSections={collapsedSections}
         onToggleSection={toggleSection}
-        onAddSection={openSectionModal}
-        onEditSection={openSectionModal}
+        onAddSection={() => openSectionModal()}
+        onEditSection={(sec) => openSectionModal(sec)}
         onDeleteSection={handleDeleteSection}
-        onAddItem={openItemModal}
+        onAddItem={(item, secId) => openItemModal(item, secId)}
         onQuickAdd={handleQuickAddItem}
         onToggleItem={handleToggleItemStatus}
-        onEditItem={openItemModal}
+        onEditItem={(item) => openItemModal(item)}
         onUpdateItem={handleUpdateItem}
         onDeleteItem={handleDeleteItem}
         getSectionItems={getSectionItems}

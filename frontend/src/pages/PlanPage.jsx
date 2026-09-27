@@ -227,6 +227,19 @@ function PlanPage() {
     )
   }
 
+  if (!plan) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+        <h2 className="text-xl font-bold text-foreground">Plan not found</h2>
+        <p className="mt-2 text-sm text-muted-foreground">The requested plan could not be loaded or may have been deleted.</p>
+        <Button className="mt-4" onClick={() => navigate("/workspaces")}>
+          <ArrowLeft className="mr-1.5 h-4 w-4" />
+          Back to Workspaces
+        </Button>
+      </div>
+    )
+  }
+
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       {/* Header */}

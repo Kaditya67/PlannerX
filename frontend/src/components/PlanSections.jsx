@@ -172,8 +172,8 @@ function PlanSections({
         </Card>
       )}
 
-      {/* Add New Section Button at the bottom of existing sections */}
-      {sections.length > 0 && (
+      {/* Add New Section Button at the bottom */}
+      {(sections.length > 0 || items.length > 0) && (
         <button
           type="button"
           onClick={() => onAddSection && onAddSection()}

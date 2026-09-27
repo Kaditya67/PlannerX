@@ -127,7 +127,8 @@ export function usePlan(planId, toast) {
           completedDuration: data.completedDuration || 0
         }
       } catch (error) {
-        toast.error("Failed to load plan")
+        console.error("Failed to load plan:", error)
+        toast.error(error.message || "Failed to load plan")
         navigate("/workspaces")
       } finally {
         setLoading(false)
@@ -248,11 +249,13 @@ export function usePlan(planId, toast) {
         priority: item.priority || "medium",
         plannedDuration: item.plannedDuration || 60,
       })
-      setCurrentSectionId(item.section)
+      const secId = item.section?._id ? item.section._id.toString() : item.section ? item.section.toString() : null
+      setCurrentSectionId(secId)
     } else {
       setEditingItem(null)
       setItemForm({ title: "", description: "", priority: "medium", plannedDuration: 60 })
-      setCurrentSectionId(typeof sectionId === "string" ? sectionId : null)
+      const secId = sectionId?._id ? sectionId._id.toString() : typeof sectionId === "string" ? sectionId : null
+      setCurrentSectionId(secId)
     }
     setItemModalOpen(true)
   }
@@ -356,11 +359,17 @@ export function usePlan(planId, toast) {
   }
 
   const getSectionItems = (sectionId) => {
-    return items.filter((item) => item.section === sectionId)
+    return items.filter((item) => {
+      const itemSecId = item.section?._id ? item.section._id.toString() : item.section ? item.section.toString() : null
+      return itemSecId === (sectionId?.toString() || sectionId)
+    })
   }
 
   const getUnsectionedItems = () => {
-    return items.filter((item) => !item.section)
+    return items.filter((item) => {
+      const itemSecId = item.section?._id || item.section
+      return !itemSecId
+    })
   }
 
   return {

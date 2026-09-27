@@ -34,41 +34,41 @@ function ItemModal({
       onClose={handleClose}
       title={editingItem ? "Edit Task Item" : "Create New Task"}
     >
-      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-4">
         {/* Title */}
-        <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-foreground tracking-wide uppercase">
-            Title <span className="text-red-500">*</span>
+        <div>
+          <label className="block text-xs font-medium text-foreground/80 mb-2">
+            Task Title <span className="text-red-500">*</span>
           </label>
           <Input
             value={form.title}
             onChange={(e) => onChange({ ...form, title: e.target.value })}
-            placeholder="e.g. Design wireframes, Implement authentication"
+            placeholder="e.g. Design wireframes"
             required
             autoFocus
-            className="h-10 text-sm bg-accent/30 focus:bg-background"
+            className="h-9 text-sm"
           />
         </div>
 
         {/* Description */}
-        <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-foreground tracking-wide uppercase">
-            Description
+        <div>
+          <label className="block text-xs font-medium text-foreground/80 mb-2">
+            Description <span className="text-[11px] text-muted-foreground font-normal">(optional)</span>
           </label>
           <textarea
             value={form.description}
             onChange={(e) =>
               onChange({ ...form, description: e.target.value })
             }
-            placeholder="Optional context, checklist or sub-steps..."
-            rows={3}
-            className="w-full rounded-lg border border-input bg-accent/30 focus:bg-background p-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+            placeholder="Notes or checklist..."
+            rows={2}
+            className="w-full rounded-lg border border-input bg-card p-2.5 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors resize-none"
           />
         </div>
 
         {/* Priority Selector */}
-        <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-foreground tracking-wide uppercase">
+        <div>
+          <label className="block text-xs font-medium text-foreground/80 mb-2">
             Priority
           </label>
           <div className="grid grid-cols-4 gap-2">
@@ -79,7 +79,7 @@ function ItemModal({
                   key={p.value}
                   type="button"
                   onClick={() => onChange({ ...form, priority: p.value })}
-                  className={`h-9 rounded-lg border text-xs font-medium transition-all ${
+                  className={`h-8 rounded-lg border text-xs font-medium transition-all ${
                     isSelected
                       ? `${p.activeColor} shadow-2xs font-semibold ring-1 ring-current`
                       : "border-border text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -93,9 +93,9 @@ function ItemModal({
         </div>
 
         {/* Duration */}
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-semibold text-foreground tracking-wide uppercase flex items-center gap-1.5">
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs font-medium text-foreground/80 flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5 text-muted-foreground" />
               Estimated Duration
             </label>
@@ -118,7 +118,7 @@ function ItemModal({
                   plannedDuration: Math.max(0, Number(e.target.value) || 0),
                 })
               }
-              className="h-9 text-sm bg-accent/30 focus:bg-background flex-1"
+              className="h-9 text-sm flex-1"
             />
             <div className="flex items-center gap-1 shrink-0">
               {[15, 30, 45, 60, 90].map((mins) => (
@@ -140,7 +140,7 @@ function ItemModal({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-border/60">
+        <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
           <Button type="button" variant="outline" size="sm" onClick={handleClose} className="px-4">
             Cancel
           </Button>

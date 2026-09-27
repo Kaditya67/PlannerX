@@ -172,6 +172,18 @@ function PlanSections({
         </Card>
       )}
 
+      {/* Add New Section Button at the bottom of existing sections */}
+      {sections.length > 0 && (
+        <button
+          type="button"
+          onClick={() => onAddSection && onAddSection()}
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border py-3 text-xs sm:text-sm font-medium text-muted-foreground hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/20 transition-all cursor-pointer"
+        >
+          <Plus className="h-4 w-4" />
+          <span>Add New Section</span>
+        </button>
+      )}
+
       {/* Empty State */}
       {sections.length === 0 && items.length === 0 && (
         <Card>

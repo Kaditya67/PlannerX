@@ -30,14 +30,14 @@ function Modal({ isOpen, onClose, title, children, className, size = "md" }) {
 
       <div
         className={cn(
-          "relative z-50 w-full rounded-2xl border border-border/80 bg-card p-5 sm:p-6 shadow-2xl text-card-foreground my-auto",
+          "relative z-50 w-full rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-xl text-card-foreground my-auto",
           "animate-in fade-in-0 zoom-in-95 duration-200",
           sizes[size],
           className,
         )}
       >
-        <div className="mb-4 sm:mb-5 flex items-center justify-between pb-3 border-b border-border/60">
-          <h2 className="text-base sm:text-lg font-semibold text-foreground tracking-tight">
+        <div className="mb-4 flex items-center justify-between pb-3 border-b border-border/80">
+          <h2 className="text-base font-semibold text-foreground tracking-tight">
             {title}
           </h2>
           <Button

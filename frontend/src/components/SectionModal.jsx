@@ -23,37 +23,37 @@ function SectionModal({
       title={editingSection ? "Edit Section" : "Add Section"}
     >
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-foreground tracking-wide uppercase">
+        <div>
+          <label className="block text-xs font-medium text-foreground/80 mb-2">
             Section Name <span className="text-red-500">*</span>
           </label>
           <Input
             value={form.name}
             onChange={(e) => onChange({ ...form, name: e.target.value })}
-            placeholder="e.g. Phase 1: Fundamentals, Core Architecture"
+            placeholder="e.g. Planning & Research"
             required
             autoFocus
-            className="h-10 text-sm bg-accent/30 focus:bg-background"
+            className="h-9 text-sm"
           />
         </div>
-        <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-foreground tracking-wide uppercase">
-            Description
+        <div>
+          <label className="block text-xs font-medium text-foreground/80 mb-2">
+            Description <span className="text-[11px] text-muted-foreground font-normal">(optional)</span>
           </label>
           <textarea
             value={form.description}
             onChange={(e) => onChange({ ...form, description: e.target.value })}
-            placeholder="Optional context or milestone goals for this section..."
-            rows={3}
-            className="w-full rounded-lg border border-input bg-accent/30 focus:bg-background p-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+            placeholder="Short note about this section..."
+            rows={2}
+            className="w-full rounded-lg border border-input bg-card p-2.5 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors resize-none"
           />
         </div>
-        <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-border/60">
-          <Button type="button" variant="outline" size="sm" onClick={onClose} className="px-4">
+        <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
+          <Button type="button" variant="outline" size="sm" onClick={onClose} className="px-3.5">
             Cancel
           </Button>
-          <Button type="submit" size="sm" loading={submitting} className="px-5 shadow-xs">
-            {editingSection ? "Update Section" : "Create Section"}
+          <Button type="submit" size="sm" loading={submitting} className="px-4">
+            {editingSection ? "Save Changes" : "Add Section"}
           </Button>
         </div>
       </form>

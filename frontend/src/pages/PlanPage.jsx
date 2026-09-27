@@ -351,50 +351,59 @@ function PlanPage() {
         initialItems={items}
       />
 
-      {/* Plan Modal - NEW */}
+      {/* Plan Modal - Edit Plan */}
       <Modal
         isOpen={planModalOpen}
         onClose={() => setPlanModalOpen(false)}
-        title="Edit Plan"
+        title="Edit Plan Details"
       >
         <form onSubmit={handlePlanSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Plan Name *</label>
+          <div>
+            <label className="block text-xs font-medium text-foreground/80 mb-2">
+              Plan Name <span className="text-red-500">*</span>
+            </label>
             <Input
               value={planForm.name}
               onChange={(e) => setPlanForm({ ...planForm, name: e.target.value })}
-              placeholder="Plan name"
+              placeholder="e.g. Backend Architecture, React Mastery"
               required
               autoFocus
+              className="h-9 text-sm"
             />
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Description</label>
+
+          <div>
+            <label className="block text-xs font-medium text-foreground/80 mb-2">
+              Description <span className="text-[11px] text-muted-foreground font-normal">(optional)</span>
+            </label>
             <textarea
               value={planForm.description}
               onChange={(e) => setPlanForm({ ...planForm, description: e.target.value })}
-              placeholder="Optional description"
-              className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="Brief overview or goals for this roadmap..."
+              rows={2}
+              className="w-full rounded-lg border border-input bg-card p-2.5 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors resize-none"
             />
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Color</label>
+
+          <div>
+            <label className="block text-xs font-medium text-foreground/80 mb-2">Color Accent</label>
             <div className="flex items-center gap-3">
               <input
                 type="color"
                 value={planForm.color}
                 onChange={(e) => setPlanForm({ ...planForm, color: e.target.value })}
-                className="h-10 w-10 cursor-pointer rounded border border-input bg-background"
+                className="h-8 w-8 cursor-pointer rounded-lg border border-input bg-background"
               />
-              <span className="text-sm text-muted-foreground">{planForm.color}</span>
+              <span className="text-xs text-muted-foreground font-mono">{planForm.color}</span>
             </div>
           </div>
-          <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={() => setPlanModalOpen(false)}>
+
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
+            <Button type="button" variant="outline" size="sm" onClick={() => setPlanModalOpen(false)} className="px-3.5">
               Cancel
             </Button>
-            <Button type="submit" loading={planSubmitting}>
-              Update Plan
+            <Button type="submit" size="sm" loading={planSubmitting} className="px-4 shadow-xs">
+              Save Changes
             </Button>
           </div>
         </form>
@@ -473,69 +482,77 @@ function PlanPage() {
       {/* Create New Plan Modal */}
       <Modal isOpen={createPlanModalOpen} onClose={() => setCreatePlanModalOpen(false)} title="Create New Plan">
         <form onSubmit={handleCreateNewPlan} className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Plan Type</label>
+          <div>
+            <label className="block text-xs font-medium text-foreground/80 mb-2">Plan Type</label>
             <div className="grid grid-cols-5 gap-2">
               {Object.entries(PLAN_TYPE_LABELS).map(([type, config]) => {
                 const Icon = PLAN_TYPE_ICONS[type]
+                const isSelected = newPlanForm.type === type
                 return (
                   <button
                     key={type}
                     type="button"
                     onClick={() => setNewPlanForm({ ...newPlanForm, type, color: config.color })}
-                    className={`flex flex-col items-center gap-1.5 rounded-lg border p-2.5 transition-colors ${
-                      newPlanForm.type === type
-                        ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
-                        : "border-border hover:bg-accent/40"
-                    }`}
+                    className={cn(
+                      "flex flex-col items-center gap-1.5 rounded-xl border p-2.5 transition-all text-center cursor-pointer",
+                      isSelected
+                        ? "border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40 shadow-2xs ring-1 ring-emerald-500 font-semibold"
+                        : "border-border hover:bg-accent/50 text-muted-foreground hover:text-foreground"
+                    )}
                   >
-                    <Icon className="h-4 w-4" style={{ color: config.color }} />
-                    <span className="text-[11px] text-foreground">{config.label}</span>
+                    <Icon className="h-4.5 w-4.5 shrink-0" style={{ color: config.color }} />
+                    <span className="text-[11px] leading-tight truncate w-full">{config.label}</span>
                   </button>
                 )
               })}
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Name</label>
+          <div>
+            <label className="block text-xs font-medium text-foreground/80 mb-2">
+              Plan Name <span className="text-red-500">*</span>
+            </label>
             <Input
               value={newPlanForm.name}
               onChange={(e) => setNewPlanForm({ ...newPlanForm, name: e.target.value })}
-              placeholder="e.g. System Design, React Mastery"
+              placeholder="e.g. Backend Architecture, React Mastery"
               required
               autoFocus
+              className="h-9 text-sm"
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Description</label>
+          <div>
+            <label className="block text-xs font-medium text-foreground/80 mb-2">
+              Description <span className="text-[11px] text-muted-foreground font-normal">(optional)</span>
+            </label>
             <textarea
               value={newPlanForm.description}
               onChange={(e) => setNewPlanForm({ ...newPlanForm, description: e.target.value })}
-              placeholder="Optional description of this plan"
-              className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="Brief overview or goals for this roadmap..."
+              rows={2}
+              className="w-full rounded-lg border border-input bg-card p-2.5 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors resize-none"
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Color</label>
+          <div>
+            <label className="block text-xs font-medium text-foreground/80 mb-2">Color Accent</label>
             <div className="flex items-center gap-3">
               <input
                 type="color"
                 value={newPlanForm.color}
                 onChange={(e) => setNewPlanForm({ ...newPlanForm, color: e.target.value })}
-                className="h-10 w-10 cursor-pointer rounded border border-input bg-background"
+                className="h-8 w-8 cursor-pointer rounded-lg border border-input bg-background"
               />
-              <span className="text-sm text-muted-foreground">{newPlanForm.color}</span>
+              <span className="text-xs text-muted-foreground font-mono">{newPlanForm.color}</span>
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={() => setCreatePlanModalOpen(false)}>
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
+            <Button type="button" variant="outline" size="sm" onClick={() => setCreatePlanModalOpen(false)} className="px-3.5">
               Cancel
             </Button>
-            <Button type="submit" loading={createPlanSubmitting}>
+            <Button type="submit" size="sm" loading={createPlanSubmitting} className="px-4 shadow-xs">
               Create Plan
             </Button>
           </div>

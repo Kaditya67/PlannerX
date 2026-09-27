@@ -281,28 +281,36 @@ function WorkspacesPage() {
         title={editingWorkspace ? "Edit Workspace" : "Create Workspace"}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-900 dark:text-gray-100">Name</label>
+          <div>
+            <label className="block text-xs font-medium text-foreground/80 mb-2">
+              Workspace Name <span className="text-red-500">*</span>
+            </label>
             <Input
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="My Workspace"
+              placeholder="e.g. Engineering, Side Projects"
               required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-900 dark:text-gray-100">Description</label>
-            <Input
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Optional description"
+              autoFocus
+              className="h-9 text-sm"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2.5">
-              Color
+            <label className="block text-xs font-medium text-foreground/80 mb-2">
+              Description <span className="text-[11px] text-muted-foreground font-normal">(optional)</span>
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Short note about what belongs in this workspace..."
+              rows={2}
+              className="w-full rounded-lg border border-input bg-card p-2.5 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors resize-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-foreground/80 mb-2">
+              Color Accent
             </label>
             <div className="flex flex-wrap items-center gap-3 pt-1 pb-1">
               {["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899"].map((color) => (
@@ -323,12 +331,12 @@ function WorkspacesPage() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
+            <Button type="button" variant="outline" size="sm" onClick={() => setModalOpen(false)} className="px-3.5">
               Cancel
             </Button>
-            <Button type="submit" loading={submitting}>
-              {editingWorkspace ? "Update" : "Create"}
+            <Button type="submit" size="sm" loading={submitting} className="px-4 shadow-xs">
+              {editingWorkspace ? "Update Workspace" : "Create Workspace"}
             </Button>
           </div>
         </form>

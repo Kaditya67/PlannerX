@@ -526,54 +526,66 @@ function WorkspacePage() {
       {/* Create Plan Modal */}
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Create New Plan">
         <form onSubmit={handleCreatePlan} className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-900 dark:text-gray-100">Plan Type</label>
+          <div>
+            <label className="block text-xs font-medium text-foreground/80 mb-2">
+              Plan Type
+            </label>
             <div className="grid grid-cols-5 gap-2">
               {Object.entries(PLAN_TYPE_LABELS).map(([type, config]) => {
                 const Icon = PLAN_TYPE_ICONS[type]
+                const isSelected = formData.type === type
                 return (
                   <button
                     key={type}
                     type="button"
                     onClick={() => setFormData({ ...formData, type, color: config.color })}
-                    className={`flex flex-col items-center gap-2 rounded-lg border p-3 transition-colors ${
-                      formData.type === type
-                        ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
-                        : "border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
-                    }`}
+                    className={cn(
+                      "flex flex-col items-center gap-1.5 rounded-xl border p-2.5 transition-all text-center cursor-pointer",
+                      isSelected
+                        ? "border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40 shadow-2xs ring-1 ring-emerald-500 font-semibold"
+                        : "border-border hover:bg-accent/50 text-muted-foreground hover:text-foreground"
+                    )}
                   >
-                    <Icon className="h-5 w-5" style={{ color: config.color }} />
-                    <span className="text-xs text-gray-700 dark:text-gray-300">{config.label}</span>
+                    <Icon className="h-4.5 w-4.5 shrink-0" style={{ color: config.color }} />
+                    <span className="text-[11px] leading-tight truncate w-full">{config.label}</span>
                   </button>
                 )
               })}
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-900 dark:text-gray-100">Name</label>
+          <div>
+            <label className="block text-xs font-medium text-foreground/80 mb-2">
+              Plan Name <span className="text-red-500">*</span>
+            </label>
             <Input
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="My Plan"
+              placeholder="e.g. Backend Architecture, React Mastery"
               required
+              autoFocus
+              className="h-9 text-sm"
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-900 dark:text-gray-100">Description</label>
-            <Input
+          <div>
+            <label className="block text-xs font-medium text-foreground/80 mb-2">
+              Description <span className="text-[11px] text-muted-foreground font-normal">(optional)</span>
+            </label>
+            <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Optional description"
+              placeholder="Brief overview or goals for this roadmap..."
+              rows={2}
+              className="w-full rounded-lg border border-input bg-card p-2.5 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors resize-none"
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
+            <Button type="button" variant="outline" size="sm" onClick={() => setModalOpen(false)} className="px-3.5">
               Cancel
             </Button>
-            <Button type="submit" loading={submitting}>
+            <Button type="submit" size="sm" loading={submitting} className="px-4 shadow-xs">
               Create Plan
             </Button>
           </div>

@@ -16,7 +16,7 @@ import {
   EyeOff,
 } from "lucide-react"
 
-function PlanHeader({ plan, onEditPlan, onAddSection, onDownload, onShareTemplate, onCopyTemplate, onSmartEdit, onUpdateStatus, showStats, onToggleStats }) {
+function PlanHeader({ plan, onEditPlan, onAddSection, onDownload, onShareTemplate, onCopyTemplate, onSmartEdit, onUpdateStatus, showStats, onToggleStats, onCreateNewPlan }) {
   const status = plan?.status || "active"
 
   return (
@@ -77,6 +77,15 @@ function PlanHeader({ plan, onEditPlan, onAddSection, onDownload, onShareTemplat
             </Button>
           }
         >
+          {onCreateNewPlan && (
+            <>
+              <DropdownItem onClick={onCreateNewPlan} className="text-emerald-600 dark:text-emerald-400 font-medium">
+                <Plus className="mr-2 h-4 w-4" />
+                New Plan in Workspace
+              </DropdownItem>
+              <DropdownSeparator />
+            </>
+          )}
           <DropdownItem onClick={onEditPlan}>
             <Pencil className="mr-2 h-4 w-4 text-muted-foreground" />
             Edit Plan Details

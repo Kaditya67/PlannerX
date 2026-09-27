@@ -144,7 +144,24 @@ function PlanSections({
       {/* Unsectioned Items */}
       {getUnsectionedItems().length > 0 && (
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CardTitle>General Tasks</CardTitle>
+                <Badge variant="secondary">
+                  {getUnsectionedItems().length} {getUnsectionedItems().length === 1 ? "item" : "items"}
+                </Badge>
+              </div>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onAddItem && onAddItem(null, null)}
+              >
+                <Plus className="mr-1 h-4 w-4" />
+                Add Item
+              </Button>
+            </div>
           </CardHeader>
 
           <CardContent>

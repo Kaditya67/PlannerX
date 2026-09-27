@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useToast } from "../context/ToastContext.jsx"
 import { planAPI } from "../api/index.js"
-import { ArrowLeft, Copy, Check, Download, Share2 } from "lucide-react"
+import { ArrowLeft, Copy, Check, Download, Share2, Plus, Folder, BookOpen, Calendar, Sun, Layers } from "lucide-react"
 import Button from "../components/ui/Button.jsx"
 import { Card, CardContent } from "../components/ui/Card.jsx"
 import LoadingSpinner from "../components/ui/LoadingSpinner.jsx"
@@ -15,7 +15,16 @@ import SectionModal from "../components/SectionModal.jsx"
 import ItemModal from "../components/ItemModal.jsx"
 import SmartEditor from "../components/SmartEditor.jsx"
 import { usePlan } from "../hooks/usePlan.js"
-import { formatDuration } from "../utils/helpers.js"
+import { formatDuration, generateColor } from "../utils/helpers.js"
+import { PLAN_TYPES, PLAN_TYPE_LABELS } from "../utils/constants.js"
+
+const PLAN_TYPE_ICONS = {
+  project: Folder,
+  study: BookOpen,
+  event: Calendar,
+  daily: Sun,
+  free: Layers,
+}
 
 function PlanPage() {
   const { planId } = useParams()
@@ -58,6 +67,14 @@ function PlanPage() {
   const [smartEditorOpen, setSmartEditorOpen] = useState(false)
   const [planModalOpen, setPlanModalOpen] = useState(false)
   const [planSubmitting, setPlanSubmitting] = useState(false)
+  const [createPlanModalOpen, setCreatePlanModalOpen] = useState(false)
+  const [createPlanSubmitting, setCreatePlanSubmitting] = useState(false)
+  const [newPlanForm, setNewPlanForm] = useState({
+    name: "",
+    description: "",
+    type: PLAN_TYPES.PROJECT,
+    color: generateColor(),
+  })
   const [showStats, setShowStats] = useState(() => {
     return localStorage.getItem("planner_show_plan_stats") === "true" // hidden by default!
   })
@@ -66,6 +83,33 @@ function PlanPage() {
     description: "",
     color: "#3B82F6"
   })
+
+  const openCreatePlanModal = () => {
+    setNewPlanForm({
+      name: "",
+      description: "",
+      type: PLAN_TYPES.PROJECT,
+      color: generateColor(),
+    })
+    setCreatePlanModalOpen(true)
+  }
+
+  const handleCreateNewPlan = async (e) => {
+    e.preventDefault()
+    setCreatePlanSubmitting(true)
+
+    try {
+      const workspaceId = plan?.workspace?._id || plan?.workspace
+      const { data } = await planAPI.create({ ...newPlanForm, workspace: workspaceId })
+      toast.success("New plan created!")
+      setCreatePlanModalOpen(false)
+      navigate(`/plans/${data._id}`)
+    } catch (error) {
+      toast.error(error.message || "Failed to create plan")
+    } finally {
+      setCreatePlanSubmitting(false)
+    }
+  }
 
   // Open plan modal with current plan data
   const openPlanModal = () => {
@@ -212,6 +256,7 @@ function PlanPage() {
             setShowStats(next)
             localStorage.setItem("planner_show_plan_stats", String(next))
           }}
+          onCreateNewPlan={openCreatePlanModal}
         />
 
         {/* Progress Card - Hidden by default, togglable */}
@@ -423,6 +468,78 @@ function PlanPage() {
             </div>
           )}
         </div>
+      </Modal>
+
+      {/* Create New Plan Modal */}
+      <Modal isOpen={createPlanModalOpen} onClose={() => setCreatePlanModalOpen(false)} title="Create New Plan">
+        <form onSubmit={handleCreateNewPlan} className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">Plan Type</label>
+            <div className="grid grid-cols-5 gap-2">
+              {Object.entries(PLAN_TYPE_LABELS).map(([type, config]) => {
+                const Icon = PLAN_TYPE_ICONS[type]
+                return (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setNewPlanForm({ ...newPlanForm, type, color: config.color })}
+                    className={`flex flex-col items-center gap-1.5 rounded-lg border p-2.5 transition-colors ${
+                      newPlanForm.type === type
+                        ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
+                        : "border-border hover:bg-accent/40"
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" style={{ color: config.color }} />
+                    <span className="text-[11px] text-foreground">{config.label}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">Name</label>
+            <Input
+              value={newPlanForm.name}
+              onChange={(e) => setNewPlanForm({ ...newPlanForm, name: e.target.value })}
+              placeholder="e.g. System Design, React Mastery"
+              required
+              autoFocus
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">Description</label>
+            <textarea
+              value={newPlanForm.description}
+              onChange={(e) => setNewPlanForm({ ...newPlanForm, description: e.target.value })}
+              placeholder="Optional description of this plan"
+              className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">Color</label>
+            <div className="flex items-center gap-3">
+              <input
+                type="color"
+                value={newPlanForm.color}
+                onChange={(e) => setNewPlanForm({ ...newPlanForm, color: e.target.value })}
+                className="h-10 w-10 cursor-pointer rounded border border-input bg-background"
+              />
+              <span className="text-sm text-muted-foreground">{newPlanForm.color}</span>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <Button type="button" variant="outline" onClick={() => setCreatePlanModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" loading={createPlanSubmitting}>
+              Create Plan
+            </Button>
+          </div>
+        </form>
       </Modal>
     </div>
   )

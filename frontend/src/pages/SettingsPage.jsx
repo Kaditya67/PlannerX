@@ -90,17 +90,34 @@ function SettingsPage() {
     { value: "calendar", label: "Calendar", icon: Calendar, description: "Daily & monthly activity logs and schedules" },
   ]
 
+  const [selectedDefaultTab, setSelectedDefaultTab] = useState(
+    user?.preferences?.defaultTab || "dashboard"
+  )
+
+  // Keep in sync if user changes
+  useEffect(() => {
+    if (user?.preferences?.defaultTab) {
+      setSelectedDefaultTab(user.preferences.defaultTab)
+    }
+  }, [user?.preferences?.defaultTab])
+
   const handleDefaultTabChange = async (newTab) => {
+    // 1. Instant optimistic UI feedback
+    setSelectedDefaultTab(newTab)
+
     try {
       const updatedPreferences = {
         ...user?.preferences,
         defaultTab: newTab,
       }
-      const { data } = await authAPI.updateProfile({ preferences: updatedPreferences })
-      setUser(data.user)
-      localStorage.setItem("user", JSON.stringify(data.user))
+      const res = await authAPI.updateProfile({ preferences: updatedPreferences })
+      const updatedUser = res.data?.user || res.user || { ...user, preferences: updatedPreferences }
+      setUser(updatedUser)
+      localStorage.setItem("user", JSON.stringify(updatedUser))
       toast.success(`Default landing page set to ${newTab.charAt(0).toUpperCase() + newTab.slice(1)}`)
     } catch (error) {
+      // Revert on error
+      setSelectedDefaultTab(user?.preferences?.defaultTab || "dashboard")
       toast.error(error.message || "Failed to update default landing page")
     }
   }
@@ -112,7 +129,7 @@ function SettingsPage() {
     return theme
   }
 
-  const currentDefaultTab = user?.preferences?.defaultTab || "dashboard"
+  const currentDefaultTab = selectedDefaultTab
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-6 lg:p-8">
@@ -298,33 +315,54 @@ function SettingsPage() {
                         type="button"
                         onClick={() => handleDefaultTabChange(option.value)}
                         className={cn(
-                          "relative flex items-start gap-3 p-3.5 rounded-xl border text-left transition-all cursor-pointer",
+                          "relative flex items-start gap-3.5 p-4 rounded-xl border text-left transition-all cursor-pointer",
                           isSelected
-                            ? "border-primary bg-primary/10 ring-1 ring-primary shadow-xs"
-                            : "border-border hover:bg-accent/50 hover:border-border/80"
+                            ? "border-emerald-600 bg-emerald-500/10 dark:border-emerald-500 dark:bg-emerald-500/15 ring-2 ring-emerald-500/30 shadow-sm"
+                            : "border-border bg-card hover:bg-accent/50 hover:border-border/80"
                         )}
                       >
-                        {isSelected && (
-                          <span className="absolute top-2.5 right-2.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                            <Check className="h-2.5 w-2.5" />
-                          </span>
-                        )}
-                        <div className={cn(
-                          "h-9 w-9 rounded-lg flex items-center justify-center shrink-0 mt-0.5",
-                          isSelected ? "bg-primary text-primary-foreground" : "bg-accent text-muted-foreground"
-                        )}>
-                          <Icon className="h-4.5 w-4.5" />
+                        {/* Radio Checkmark Indicator Badge */}
+                        <div className="absolute top-3 right-3 flex items-center justify-center">
+                          {isSelected ? (
+                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 dark:bg-emerald-500 text-white shadow-xs animate-in zoom-in-75">
+                              <Check className="h-3 w-3 stroke-[3]" />
+                            </span>
+                          ) : (
+                            <span className="h-4 w-4 rounded-full border border-muted-foreground/40" />
+                          )}
                         </div>
-                        <div className="pr-4">
-                          <p className="font-semibold text-xs text-foreground flex items-center gap-1.5">
-                            {option.label}
-                            {option.value === "focus" && (
+
+                        {/* Icon Container */}
+                        <div className={cn(
+                          "h-10 w-10 rounded-xl flex items-center justify-center shrink-0 shadow-xs transition-colors",
+                          isSelected 
+                            ? "bg-emerald-600 text-white dark:bg-emerald-500" 
+                            : "bg-muted text-muted-foreground"
+                        )}>
+                          <Icon className="h-5 w-5" />
+                        </div>
+
+                        {/* Text description */}
+                        <div className="pr-6">
+                          <div className="flex items-center gap-2">
+                            <span className={cn(
+                              "font-bold text-xs tracking-tight",
+                              isSelected ? "text-emerald-700 dark:text-emerald-300" : "text-foreground"
+                            )}>
+                              {option.label}
+                            </span>
+                            {isSelected && (
+                              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-emerald-600/15 text-emerald-700 dark:bg-emerald-400/20 dark:text-emerald-300">
+                                Active Default
+                              </span>
+                            )}
+                            {option.value === "focus" && !isSelected && (
                               <span className="text-[10px] font-normal px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400">
                                 Deep Work
                               </span>
                             )}
-                          </p>
-                          <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{option.description}</p>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground mt-1 leading-snug">{option.description}</p>
                         </div>
                       </button>
                     )

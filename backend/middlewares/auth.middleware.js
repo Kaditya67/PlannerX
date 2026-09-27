@@ -28,6 +28,16 @@ export const protect = asyncHandler(async (req, res, next) => {
       throw new Error("User not found or deleted")
     }
 
+    if (req.user.status === "suspended") {
+      res.status(403)
+      throw new Error(req.user.statusReason ? `Account suspended: ${req.user.statusReason}` : "Your account has been suspended by an administrator.")
+    }
+
+    if (req.user.status === "deactivated") {
+      res.status(403)
+      throw new Error("Your account has been deactivated.")
+    }
+
     next()
   } catch (error) {
     res.status(401)

@@ -6,6 +6,7 @@ import {
   resetUserPassword,
   wipeUserData,
   deleteUserByAdmin,
+  getUserDetails,
 } from "../controllers/admin.controller.js"
 import { protect, admin } from "../middlewares/auth.middleware.js"
 import { withDB } from "../middlewares/db.middleware.js"
@@ -17,6 +18,7 @@ router.use(protect, admin, withDB)
 
 router.get("/stats", getSystemStats)
 router.get("/users", getAllUsers)
+router.get("/users/:userId/details", getUserDetails)
 router.patch("/users/:userId", updateUserByAdmin)
 router.post("/users/:userId/reset-password", resetUserPassword)
 router.post("/users/:userId/wipe-data", wipeUserData)

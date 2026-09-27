@@ -12,5 +12,7 @@ export const adminAPI = {
 
   wipeUserData: (userId) => apiClient.post(`/admin/users/${userId}/wipe-data`),
 
+  getUserDetails: (userId) => apiClient.get(`/admin/users/${userId}/details`),
+
   deleteUser: (userId) => apiClient.delete(`/admin/users/${userId}`),
 }

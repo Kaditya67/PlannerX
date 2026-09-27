@@ -38,6 +38,19 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin"],
       default: "user",
     },
+    status: {
+      type: String,
+      enum: ["active", "suspended", "deactivated"],
+      default: "active",
+    },
+    statusReason: {
+      type: String,
+      default: "",
+    },
+    lastActiveAt: {
+      type: Date,
+      default: Date.now,
+    },
     preferences: {
       theme: { type: String, enum: ["light", "dark", "system"], default: "system" },
       defaultView: { type: String, enum: ["tree", "timeline", "calendar", "focus"], default: "tree" },

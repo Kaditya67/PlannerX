@@ -105,14 +105,14 @@ export const getAllUsers = asyncHandler(async (req, res) => {
   )
 })
 
-// @desc    Update user details / role / capacity
+// @desc    Update user details / role / capacity / status (activate/suspend)
 // @route   PATCH /api/admin/users/:userId
 // @access  Private/Admin
 export const updateUserByAdmin = asyncHandler(async (req, res) => {
   await connectDB()
 
   const { userId } = req.params
-  const { name, role, dailyCapacity } = req.body
+  const { name, role, dailyCapacity, status, statusReason } = req.body
 
   const user = await User.findById(userId)
   if (!user || user.isDeleted) {
@@ -120,15 +120,31 @@ export const updateUserByAdmin = asyncHandler(async (req, res) => {
     throw new Error("User not found")
   }
 
-  // Prevent admin from removing their own admin role
-  if (String(user._id) === String(req.user._id) && role && role !== "admin") {
+  // Prevent admin from removing their own admin role or suspending themselves
+  if (String(user._id) === String(req.user._id)) {
+    if (role && role !== "admin") {
+      res.status(400)
+      throw new Error("Cannot remove your own admin privileges")
+    }
+    if (status && status !== "active") {
+      res.status(400)
+      throw new Error("Cannot suspend your own administrator account")
+    }
+  }
+
+  // Prevent suspending the demo account
+  if (user.email === "demo@planner.com" && status && status !== "active") {
     res.status(400)
-    throw new Error("Cannot remove your own admin privileges")
+    throw new Error("The system demo account cannot be suspended")
   }
 
   if (name) user.name = name
   if (role && ["user", "admin"].includes(role)) user.role = role
   if (dailyCapacity !== undefined) user.dailyCapacity = Number(dailyCapacity) || 480
+  if (status && ["active", "suspended", "deactivated"].includes(status)) {
+    user.status = status
+    user.statusReason = statusReason || ""
+  }
 
   await user.save()
 
@@ -239,5 +255,39 @@ export const deleteUserByAdmin = asyncHandler(async (req, res) => {
 
   res.status(200).json(
     new ApiResponse(200, null, `User ${user.email} deactivated successfully`)
+  )
+})
+
+// @desc    Get detailed overview of a single user (workspaces, plans, recent sessions)
+// @route   GET /api/admin/users/:userId/details
+// @access  Private/Admin
+export const getUserDetails = asyncHandler(async (req, res) => {
+  await connectDB()
+
+  const { userId } = req.params
+
+  const user = await User.findById(userId).select("-password").lean()
+  if (!user || user.isDeleted) {
+    res.status(404)
+    throw new Error("User not found")
+  }
+
+  const [workspaces, plans, sessionsCount] = await Promise.all([
+    Workspace.find({ owner: user._id, isDeleted: false }).lean(),
+    Plan.find({ createdBy: user._id, isDeleted: false }).select("name type status progress totalDuration completedDuration createdAt").lean(),
+    Session.countDocuments({ user: user._id, isDeleted: false }),
+  ])
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        user,
+        workspaces,
+        plans,
+        sessionsCount,
+      },
+      "User details fetched successfully"
+    )
   )
 })

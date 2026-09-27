@@ -104,6 +104,21 @@ export const login = asyncHandler(async (req, res) => {
     throw new Error("Invalid credentials")
   }
 
+  // Check if user is suspended or deactivated by admin
+  if (user.status === "suspended") {
+    res.status(403)
+    throw new Error(user.statusReason ? `Account suspended: ${user.statusReason}` : "Your account has been suspended by an administrator. Please contact support.")
+  }
+
+  if (user.status === "deactivated") {
+    res.status(403)
+    throw new Error("Your account has been deactivated. Please contact support.")
+  }
+
+  // Update lastActiveAt
+  user.lastActiveAt = new Date()
+  await user.save()
+
   // If this is the demo account and older than 1 day, reset its experiments
   if (user.email === "demo@planner.com") {
     const ONE_DAY_MS = 24 * 60 * 60 * 1000

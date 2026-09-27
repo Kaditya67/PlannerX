@@ -10,16 +10,21 @@ import {
   Trash2,
   RotateCcw,
   Search,
-  Filter,
   CheckCircle2,
   Folder,
   Layers,
   ArrowLeft,
   RefreshCw,
   Edit2,
-  Clock,
   AlertTriangle,
   Zap,
+  Ban,
+  UserCheck,
+  Eye,
+  Activity,
+  X,
+  Clock,
+  Sparkles,
 } from "lucide-react"
 
 import Button from "../components/ui/Button.jsx"
@@ -27,7 +32,7 @@ import Input from "../components/ui/Input.jsx"
 import Modal from "../components/ui/Modal.jsx"
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card.jsx"
 import LoadingSpinner from "../components/ui/LoadingSpinner.jsx"
-import { formatDate } from "../utils/helpers.js"
+import { formatDate, formatDuration } from "../utils/helpers.js"
 
 function AdminPage() {
   const { user } = useAuth()
@@ -39,6 +44,7 @@ function AdminPage() {
   const [users, setUsers] = useState([])
   const [search, setSearch] = useState("")
   const [roleFilter, setRoleFilter] = useState("all")
+  const [statusFilter, setStatusFilter] = useState("all")
 
   // Modals state
   const [editModalOpen, setEditModalOpen] = useState(false)
@@ -53,8 +59,14 @@ function AdminPage() {
   const [confirmWipeModalOpen, setConfirmWipeModalOpen] = useState(false)
   const [submittingWipe, setSubmittingWipe] = useState(false)
 
-  const [confirmDeleteModalOpen, setConfirmDeleteModalOpen] = useState(false)
-  const [submittingDelete, setSubmittingDelete] = useState(false)
+  const [statusModalOpen, setStatusModalOpen] = useState(false)
+  const [targetStatus, setTargetStatus] = useState("suspended")
+  const [statusReason, setStatusReason] = useState("")
+  const [submittingStatus, setSubmittingStatus] = useState(false)
+
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false)
+  const [userDetails, setUserDetails] = useState(null)
+  const [loadingDetails, setLoadingDetails] = useState(false)
 
   const fetchData = async () => {
     try {
@@ -80,6 +92,12 @@ function AdminPage() {
     e.preventDefault()
     fetchData()
   }
+
+  // Filter users by status locally if selected
+  const filteredUsers = users.filter((u) => {
+    if (statusFilter === "all") return true
+    return (u.status || "active") === statusFilter
+  })
 
   // Open Edit User
   const handleOpenEdit = (targetUser) => {
@@ -155,24 +173,49 @@ function AdminPage() {
     }
   }
 
-  // Delete / Deactivate User
-  const handleOpenDelete = (targetUser) => {
+  // Block / Suspend / Activate User
+  const handleOpenStatusModal = (targetUser, newStatus) => {
     setSelectedUser(targetUser)
-    setConfirmDeleteModalOpen(true)
+    setTargetStatus(newStatus)
+    setStatusReason("")
+    setStatusModalOpen(true)
   }
 
-  const handleConfirmDelete = async () => {
+  const handleSaveStatus = async (e) => {
+    e.preventDefault()
     if (!selectedUser) return
     try {
-      setSubmittingDelete(true)
-      await adminAPI.deleteUser(selectedUser._id)
-      toast.success(`User ${selectedUser.email} deactivated successfully`)
-      setConfirmDeleteModalOpen(false)
+      setSubmittingStatus(true)
+      await adminAPI.updateUser(selectedUser._id, {
+        status: targetStatus,
+        statusReason,
+      })
+      toast.success(
+        targetStatus === "active"
+          ? `User ${selectedUser.email} account reactivated!`
+          : `User ${selectedUser.email} account suspended.`
+      )
+      setStatusModalOpen(false)
       fetchData()
     } catch (err) {
-      toast.error(err.message || "Failed to deactivate user")
+      toast.error(err.message || "Failed to update account status")
     } finally {
-      setSubmittingDelete(false)
+      setSubmittingStatus(false)
+    }
+  }
+
+  // View User Details & Workspaces
+  const handleOpenDetails = async (targetUser) => {
+    setSelectedUser(targetUser)
+    setDetailsModalOpen(true)
+    setLoadingDetails(true)
+    try {
+      const res = await adminAPI.getUserDetails(targetUser._id)
+      setUserDetails(res.data?.data || res.data)
+    } catch (err) {
+      toast.error(err.message || "Failed to fetch user workspaces and plans")
+    } finally {
+      setLoadingDetails(false)
     }
   }
 
@@ -207,7 +250,7 @@ function AdminPage() {
                 Administration Portal
               </h1>
               <p className="text-xs text-muted-foreground">
-                Manage system users, credentials, roles, and resource allocations
+                Manage user access, suspend/activate accounts, reset credentials, and inspect data
               </p>
             </div>
           </div>
@@ -244,7 +287,7 @@ function AdminPage() {
                 </div>
               </div>
               <div className="mt-3 pt-3 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
-                <span>{stats.users?.admins || 0} Administrators</span>
+                <span>{stats.users?.admins || 0} Admins</span>
                 <span>{stats.users?.standard || 0} Standard</span>
               </div>
             </CardContent>
@@ -319,20 +362,20 @@ function AdminPage() {
             <div>
               <CardTitle className="text-base sm:text-lg flex items-center gap-2">
                 <Users className="h-4 w-4 text-primary" />
-                User Accounts ({users.length})
+                User Accounts ({filteredUsers.length})
               </CardTitle>
               <p className="text-xs text-muted-foreground mt-0.5">
-                View, configure roles, reset passwords, or clear test data
+                Inspect details, toggle active/suspended status, reset passwords, or wipe data
               </p>
             </div>
 
             {/* Search & Filters */}
             <div className="flex items-center gap-2 flex-wrap">
-              <form onSubmit={handleSearchSubmit} className="relative flex-1 sm:w-64">
+              <form onSubmit={handleSearchSubmit} className="relative flex-1 sm:w-60">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                 <Input
                   type="text"
-                  placeholder="Search user name or email..."
+                  placeholder="Search user or email..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="pl-8 h-8 text-xs bg-accent/40"
@@ -345,8 +388,18 @@ function AdminPage() {
                 className="h-8 rounded-lg border border-border bg-card px-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               >
                 <option value="all">All Roles</option>
-                <option value="admin">Administrators</option>
-                <option value="user">Standard Users</option>
+                <option value="admin">Admins</option>
+                <option value="user">Users</option>
+              </select>
+
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="h-8 rounded-lg border border-border bg-card px-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              >
+                <option value="all">All Status</option>
+                <option value="active">Active Only</option>
+                <option value="suspended">Suspended Only</option>
               </select>
             </div>
           </div>
@@ -358,6 +411,7 @@ function AdminPage() {
               <thead className="border-b border-border/80 bg-accent/30 text-muted-foreground font-medium uppercase tracking-wider">
                 <tr>
                   <th className="py-2.5 px-3">User</th>
+                  <th className="py-2.5 px-3">Status</th>
                   <th className="py-2.5 px-3">Role</th>
                   <th className="py-2.5 px-3">Workspaces</th>
                   <th className="py-2.5 px-3">Plans</th>
@@ -366,16 +420,17 @@ function AdminPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
-                {users.length === 0 ? (
+                {filteredUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-muted-foreground">
-                      No users found matching your search criteria
+                    <td colSpan={7} className="py-8 text-center text-muted-foreground">
+                      No users found matching your filters
                     </td>
                   </tr>
                 ) : (
-                  users.map((u) => {
+                  filteredUsers.map((u) => {
                     const isSelf = String(u._id) === String(user?._id)
                     const isDemo = u.email === "demo@planner.com"
+                    const isSuspended = u.status === "suspended"
 
                     return (
                       <tr key={u._id} className="hover:bg-accent/30 transition-colors">
@@ -401,6 +456,19 @@ function AdminPage() {
                               <p className="text-[11px] text-muted-foreground truncate">{u.email}</p>
                             </div>
                           </div>
+                        </td>
+
+                        {/* STATUS PILL */}
+                        <td className="py-3 px-3">
+                          {isSuspended ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300">
+                              <Ban className="h-3 w-3" /> Suspended
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300">
+                              <CheckCircle2 className="h-3 w-3" /> Active
+                            </span>
+                          )}
                         </td>
 
                         <td className="py-3 px-3">
@@ -429,6 +497,18 @@ function AdminPage() {
 
                         <td className="py-3 px-3 text-right">
                           <div className="flex items-center justify-end gap-1">
+                            {/* Inspect user workspaces & plans */}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                              title="Inspect user workspaces and roadmaps"
+                              onClick={() => handleOpenDetails(u)}
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                            </Button>
+
+                            {/* Edit user */}
                             <Button
                               variant="ghost"
                               size="icon"
@@ -439,6 +519,7 @@ function AdminPage() {
                               <Edit2 className="h-3.5 w-3.5" />
                             </Button>
 
+                            {/* Reset password */}
                             <Button
                               variant="ghost"
                               size="icon"
@@ -449,27 +530,41 @@ function AdminPage() {
                               <Key className="h-3.5 w-3.5" />
                             </Button>
 
+                            {/* Activate / Suspend Account */}
+                            {!isSelf && !isDemo && (
+                              isSuspended ? (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/20"
+                                  title="Unblock and reactivate account"
+                                  onClick={() => handleOpenStatusModal(u, "active")}
+                                >
+                                  <UserCheck className="h-3.5 w-3.5" />
+                                </Button>
+                              ) : (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/20"
+                                  title="Suspend / block account access"
+                                  onClick={() => handleOpenStatusModal(u, "suspended")}
+                                >
+                                  <Ban className="h-3.5 w-3.5" />
+                                </Button>
+                              )
+                            )}
+
+                            {/* Wipe data */}
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-7 w-7 text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/20"
+                              className="h-7 w-7 text-muted-foreground hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20"
                               title="Wipe experimental data (Clean Slate)"
                               onClick={() => handleOpenWipe(u)}
                             >
                               <RotateCcw className="h-3.5 w-3.5" />
                             </Button>
-
-                            {!isSelf && !isDemo && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20"
-                                title="Deactivate user"
-                                onClick={() => handleOpenDelete(u)}
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
-                            )}
                           </div>
                         </td>
                       </tr>
@@ -481,6 +576,179 @@ function AdminPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* ACTIVATE / SUSPEND ACCOUNT MODAL */}
+      <Modal
+        isOpen={statusModalOpen}
+        onClose={() => setStatusModalOpen(false)}
+        title={targetStatus === "active" ? "Reactivate User Account" : "Suspend User Account"}
+      >
+        <form onSubmit={handleSaveStatus} className="space-y-4">
+          <div className="flex items-start gap-3 p-3 rounded-xl bg-accent/40 border border-border text-xs">
+            {targetStatus === "suspended" ? (
+              <Ban className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+            ) : (
+              <UserCheck className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
+            )}
+            <div>
+              <p className="font-semibold text-foreground">
+                {targetStatus === "suspended"
+                  ? `Suspend access for ${selectedUser?.name}`
+                  : `Restore access for ${selectedUser?.name}`}
+              </p>
+              <p className="mt-0.5 text-muted-foreground">
+                {targetStatus === "suspended"
+                  ? "Suspending will block this user from logging in and immediately reject any active API requests."
+                  : "Reactivating will restore normal login and workspace access for this account."}
+              </p>
+            </div>
+          </div>
+
+          {targetStatus === "suspended" && (
+            <div>
+              <label className="block text-xs font-medium text-foreground/80 mb-2">
+                Suspension Reason <span className="text-[11px] text-muted-foreground font-normal">(shown to user on login)</span>
+              </label>
+              <Input
+                value={statusReason}
+                onChange={(e) => setStatusReason(e.target.value)}
+                placeholder="e.g. Account under review, Terms violation"
+                className="h-9 text-sm"
+              />
+            </div>
+          )}
+
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setStatusModalOpen(false)}
+              className="px-3.5"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              size="sm"
+              loading={submittingStatus}
+              className={targetStatus === "suspended" ? "bg-amber-600 hover:bg-amber-700 text-white" : "shadow-xs"}
+            >
+              {targetStatus === "suspended" ? "Suspend Account" : "Reactivate Account"}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* USER DETAILS INSPECTOR MODAL */}
+      <Modal
+        isOpen={detailsModalOpen}
+        onClose={() => {
+          setDetailsModalOpen(false)
+          setUserDetails(null)
+        }}
+        title={`User Inspector: ${selectedUser?.name || "Overview"}`}
+        size="lg"
+      >
+        {loadingDetails ? (
+          <div className="py-12 flex justify-center">
+            <LoadingSpinner size="md" message="Inspecting user resources..." />
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* Quick Summary Pill Bar */}
+            <div className="grid grid-cols-3 gap-2 p-3 rounded-xl bg-accent/40 border border-border text-center text-xs">
+              <div>
+                <p className="text-muted-foreground text-[11px]">Workspaces</p>
+                <p className="font-bold text-foreground text-sm">{userDetails?.workspaces?.length || 0}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground text-[11px]">Roadmap Plans</p>
+                <p className="font-bold text-foreground text-sm">{userDetails?.plans?.length || 0}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground text-[11px]">Focus Sessions</p>
+                <p className="font-bold text-foreground text-sm">{userDetails?.sessionsCount || 0}</p>
+              </div>
+            </div>
+
+            {/* Workspaces list */}
+            <div>
+              <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">
+                Workspaces ({userDetails?.workspaces?.length || 0})
+              </h4>
+              <div className="space-y-1.5 max-h-36 overflow-y-auto no-scrollbar">
+                {userDetails?.workspaces?.length === 0 ? (
+                  <p className="text-xs text-muted-foreground py-2">No workspaces found.</p>
+                ) : (
+                  userDetails?.workspaces?.map((w) => (
+                    <div
+                      key={w._id}
+                      className="flex items-center justify-between p-2 rounded-lg border border-border text-xs"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="h-2.5 w-2.5 rounded-full"
+                          style={{ backgroundColor: w.color || "#10B981" }}
+                        />
+                        <span className="font-medium text-foreground">{w.name}</span>
+                      </div>
+                      <span className="text-[11px] text-muted-foreground">
+                        Created {formatDate(w.createdAt)}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Plans list */}
+            <div>
+              <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">
+                Roadmap Plans ({userDetails?.plans?.length || 0})
+              </h4>
+              <div className="space-y-1.5 max-h-44 overflow-y-auto no-scrollbar">
+                {userDetails?.plans?.length === 0 ? (
+                  <p className="text-xs text-muted-foreground py-2">No plans created.</p>
+                ) : (
+                  userDetails?.plans?.map((p) => (
+                    <div
+                      key={p._id}
+                      className="flex items-center justify-between p-2 rounded-lg border border-border text-xs"
+                    >
+                      <div>
+                        <p className="font-medium text-foreground">{p.name}</p>
+                        <p className="text-[10px] text-muted-foreground capitalize">
+                          {p.type} • Status: {p.status}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                          {p.progress || 0}%
+                        </span>
+                        <p className="text-[10px] text-muted-foreground">
+                          {formatDuration(p.completedDuration || 0)} / {formatDuration(p.totalDuration || 0)}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-border">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setDetailsModalOpen(false)}
+                className="px-4"
+              >
+                Close Inspector
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       {/* EDIT USER MODAL */}
       <Modal
@@ -641,41 +909,6 @@ function AdminPage() {
               onClick={handleConfirmWipe}
             >
               Wipe Experimental Data
-            </Button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* CONFIRM DELETE MODAL */}
-      <Modal
-        isOpen={confirmDeleteModalOpen}
-        onClose={() => setConfirmDeleteModalOpen(false)}
-        title="Deactivate User Account"
-      >
-        <div className="space-y-4">
-          <p className="text-xs text-muted-foreground">
-            Are you sure you want to deactivate{" "}
-            <span className="font-semibold text-foreground">{selectedUser?.email}</span>? The user
-            will no longer be able to log in to Planner.
-          </p>
-
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setConfirmDeleteModalOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              loading={submittingDelete}
-              onClick={handleConfirmDelete}
-            >
-              Deactivate User
             </Button>
           </div>
         </div>

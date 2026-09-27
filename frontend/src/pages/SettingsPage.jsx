@@ -3,7 +3,7 @@ import { useAuth } from "../context/AuthContext.jsx"
 import { useTheme } from "../context/ThemeContext.jsx"
 import { useToast } from "../context/ToastContext.jsx"
 import { authAPI } from "../api/index.js"
-import { User, Palette, Shield, Moon, Sun, Monitor, Zap, KeyRound, Check, Sparkles } from "lucide-react"
+import { User, Palette, Shield, Moon, Sun, Monitor, Zap, KeyRound, Check, Sparkles, LayoutDashboard, Folder, Calendar, Target, Compass } from "lucide-react"
 import Button from "../components/ui/Button.jsx"
 import Input from "../components/ui/Input.jsx"
 import Avatar from "../components/ui/Avatar.jsx"
@@ -12,7 +12,7 @@ import { cn } from "../utils/helpers.js"
 
 const SETTINGS_TABS = [
   { id: "profile", label: "Profile", icon: User },
-  { id: "appearance", label: "Appearance", icon: Palette },
+  { id: "appearance", label: "Appearance & Navigation", icon: Palette },
   { id: "focus", label: "Focus & Timer", icon: Zap },
   { id: "security", label: "Security", icon: Shield },
 ]
@@ -83,12 +83,36 @@ function SettingsPage() {
     { value: "system", label: "System", icon: Monitor, description: "Sync with your OS setting" },
   ]
 
+  const defaultTabOptions = [
+    { value: "dashboard", label: "Dashboard", icon: LayoutDashboard, description: "High-level metrics, recent plans & workspaces" },
+    { value: "focus", label: "Focus Timer", icon: Target, description: "Jump straight into Pomodoro work session" },
+    { value: "workspaces", label: "Workspaces", icon: Folder, description: "Browse workspaces and project roadmaps" },
+    { value: "calendar", label: "Calendar", icon: Calendar, description: "Daily & monthly activity logs and schedules" },
+  ]
+
+  const handleDefaultTabChange = async (newTab) => {
+    try {
+      const updatedPreferences = {
+        ...user?.preferences,
+        defaultTab: newTab,
+      }
+      const { data } = await authAPI.updateProfile({ preferences: updatedPreferences })
+      setUser(data.user)
+      localStorage.setItem("user", JSON.stringify(data.user))
+      toast.success(`Default landing page set to ${newTab.charAt(0).toUpperCase() + newTab.slice(1)}`)
+    } catch (error) {
+      toast.error(error.message || "Failed to update default landing page")
+    }
+  }
+
   const getResolvedTheme = () => {
     if (theme === "system") {
       return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
     }
     return theme
   }
+
+  const currentDefaultTab = user?.preferences?.defaultTab || "dashboard"
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-6 lg:p-8">
@@ -201,7 +225,8 @@ function SettingsPage() {
 
           {/* APPEARANCE TAB */}
           {activeTab === "appearance" && (
-            <Card className="max-w-2xl border-border">
+            <div className="space-y-6">
+              <Card className="max-w-2xl border-border">
               <CardHeader>
                 <div className="flex items-center gap-2.5">
                   <div className="rounded-lg bg-primary/10 p-2 text-primary">
@@ -248,6 +273,69 @@ function SettingsPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Default Landing Tab Section */}
+            <Card className="max-w-2xl border-border">
+              <CardHeader>
+                <div className="flex items-center gap-2.5">
+                  <div className="rounded-lg bg-primary/10 p-2 text-primary">
+                    <Compass className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-base text-foreground">Default Landing View</CardTitle>
+                    <CardDescription className="text-xs">Choose which tab opens immediately when you log in or visit Planner</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {defaultTabOptions.map((option) => {
+                    const Icon = option.icon
+                    const isSelected = currentDefaultTab === option.value
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => handleDefaultTabChange(option.value)}
+                        className={cn(
+                          "relative flex items-start gap-3 p-3.5 rounded-xl border text-left transition-all cursor-pointer",
+                          isSelected
+                            ? "border-primary bg-primary/10 ring-1 ring-primary shadow-xs"
+                            : "border-border hover:bg-accent/50 hover:border-border/80"
+                        )}
+                      >
+                        {isSelected && (
+                          <span className="absolute top-2.5 right-2.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                            <Check className="h-2.5 w-2.5" />
+                          </span>
+                        )}
+                        <div className={cn(
+                          "h-9 w-9 rounded-lg flex items-center justify-center shrink-0 mt-0.5",
+                          isSelected ? "bg-primary text-primary-foreground" : "bg-accent text-muted-foreground"
+                        )}>
+                          <Icon className="h-4.5 w-4.5" />
+                        </div>
+                        <div className="pr-4">
+                          <p className="font-semibold text-xs text-foreground flex items-center gap-1.5">
+                            {option.label}
+                            {option.value === "focus" && (
+                              <span className="text-[10px] font-normal px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                                Deep Work
+                              </span>
+                            )}
+                          </p>
+                          <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{option.description}</p>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+                <p className="text-[11px] text-muted-foreground pt-1">
+                  💡 Tip: If you frequently use Planner for Pomodoro & task execution sessions, selecting <strong className="text-foreground">Focus Timer</strong> lets you bypass the dashboard and enter deep work mode right away.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
           )}
 
           {/* FOCUS TAB */}

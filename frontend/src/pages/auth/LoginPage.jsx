@@ -22,9 +22,15 @@ function LoginPage() {
     setLoading(true)
 
     try {
-      await login({ email, password })
+      const loggedUser = await login({ email, password })
       toast.success("Welcome back!")
-      window.location.href = from
+      const targetPath =
+        from && from !== "/dashboard" && from !== "/"
+          ? from
+          : loggedUser?.preferences?.defaultTab
+          ? `/${loggedUser.preferences.defaultTab}`
+          : "/dashboard"
+      window.location.href = targetPath
     } catch (error) {
       toast.error(error.message)
     } finally {

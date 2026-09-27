@@ -21,11 +21,13 @@ import LoadingScreen from "./components/ui/LoadingScreen.jsx"
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx"
 
 function App() {
-  const { loading } = useAuth()
+  const { user, loading } = useAuth()
 
   if (loading) {
     return <LoadingScreen message="Initializing Planner..." />
   }
+
+  const defaultPath = user?.preferences?.defaultTab ? `/${user.preferences.defaultTab}` : "/dashboard"
 
   return (
     <Routes>
@@ -43,7 +45,7 @@ function App() {
           </ProtectedRoute>
         }
       >
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/" element={<Navigate to={defaultPath} replace />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/workspaces" element={<WorkspacesPage />} />
         <Route path="/workspaces/:workspaceId" element={<WorkspacePage />} />
@@ -55,7 +57,7 @@ function App() {
       </Route>
 
       {/* Catch all */}
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<Navigate to={defaultPath} replace />} />
     </Routes>
   )
 }

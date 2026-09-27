@@ -7,7 +7,8 @@ function AuthLayout() {
 
   // Auth guard
   if (user) {
-    return <Navigate to="/dashboard" replace />
+    const defaultPath = user?.preferences?.defaultTab ? `/${user.preferences.defaultTab}` : "/dashboard"
+    return <Navigate to={defaultPath} replace />
   }
 
   return (

@@ -36,6 +36,7 @@ const userSchema = new mongoose.Schema(
     preferences: {
       theme: { type: String, enum: ["light", "dark", "system"], default: "system" },
       defaultView: { type: String, enum: ["tree", "timeline", "calendar", "focus"], default: "tree" },
+      defaultTab: { type: String, enum: ["dashboard", "focus", "workspaces", "calendar"], default: "dashboard" },
       weekStartsOn: { type: Number, default: 1, min: 0, max: 6 },
     },
     isDeleted: { type: Boolean, default: false },

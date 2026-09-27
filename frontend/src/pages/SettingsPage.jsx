@@ -12,8 +12,8 @@ import { cn } from "../utils/helpers.js"
 
 const SETTINGS_TABS = [
   { id: "profile", label: "Profile", icon: User },
-  { id: "appearance", label: "Appearance & Navigation", icon: Palette },
-  { id: "focus", label: "Focus & Timer", icon: Zap },
+  { id: "appearance", label: "Appearance", icon: Palette },
+  { id: "focus", label: "Focus", icon: Zap },
   { id: "security", label: "Security", icon: Shield },
 ]
 
@@ -231,7 +231,7 @@ function SettingsPage() {
                     </div>
                     <div className="pt-2">
                       <Button type="submit" loading={loading} className="bg-primary text-primary-foreground">
-                        Save Profile Changes
+                        Save
                       </Button>
                     </div>
                   </form>
@@ -607,7 +607,7 @@ function FocusSettingsCard() {
 
           <div className="flex justify-end pt-2">
             <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white">
-              Save Timer Preferences
+              Save
             </Button>
           </div>
         </form>

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react"
 import { cn } from "../../utils/helpers.js"
 
-function Dropdown({ trigger, children, align = "left", className }) {
+function Dropdown({ trigger, children, align = "left", className, containerClassName }) {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef(null)
 
@@ -20,7 +20,7 @@ function Dropdown({ trigger, children, align = "left", className }) {
   }, [])
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className={cn("relative", containerClassName)} ref={dropdownRef}>
       {/* Trigger */}
       <div
         onClick={(e) => {

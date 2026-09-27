@@ -18,6 +18,8 @@ import {
   X,
   Maximize2,
   Minimize2,
+  ChevronDown,
+  Folder,
 } from "lucide-react"
 
 import Button from "../components/ui/Button.jsx"
@@ -25,6 +27,7 @@ import Input from "../components/ui/Input.jsx"
 import Modal from "../components/ui/Modal.jsx"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card.jsx"
 import LoadingSpinner from "../components/ui/LoadingSpinner.jsx"
+import { Dropdown, DropdownItem } from "../components/ui/Dropdown.jsx"
 
 import { cn, formatDuration } from "../utils/helpers.js"
 import { ITEM_STATUS } from "../utils/constants.js"
@@ -482,13 +485,13 @@ function FocusPage() {
         {/* TIMER CARD */}
         <Card className="lg:col-span-6 xl:col-span-7 flex flex-col justify-between">
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                 {isWorking ? <Zap className="text-emerald-500" /> : <Coffee className="text-amber-500" />}
                 {isWorking ? "Focus Time" : "Break Time"}
               </CardTitle>
 
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
                 {[
                   { key: "POMODORO", label: `${Math.round((durations.POMODORO?.work || 1500) / 60)}m` },
                   { key: "DEEP_WORK", label: `${Math.round((durations.DEEP_WORK?.work || 5400) / 60)}m` },
@@ -682,18 +685,52 @@ function FocusPage() {
 
               {/* Plan Filter Dropdown */}
               {plans.length > 0 && (
-                <select
-                  value={taskPlanFilter}
-                  onChange={(e) => setTaskPlanFilter(e.target.value)}
-                  className="h-8 w-full sm:w-auto max-w-full rounded-lg border border-border bg-card px-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary truncate shrink-0"
+                <Dropdown
+                  align="right"
+                  containerClassName="w-full sm:w-auto"
+                  className="w-full sm:w-56 max-h-60 overflow-y-auto no-scrollbar left-0 right-0 sm:left-auto sm:right-0"
+                  trigger={
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-full sm:w-auto max-w-full justify-between gap-2 px-2.5 text-xs font-normal"
+                      title="Filter tasks by plan"
+                    >
+                      <span className="truncate max-w-[200px] sm:max-w-[150px]">
+                        {taskPlanFilter === "ALL"
+                          ? "All Plans"
+                          : plans.find((p) => p._id === taskPlanFilter)?.name || "Selected Plan"}
+                      </span>
+                      <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    </Button>
+                  }
                 >
-                  <option value="ALL">All Plans</option>
+                  <DropdownItem
+                    onClick={() => setTaskPlanFilter("ALL")}
+                    className={cn(
+                      "text-xs py-1.5",
+                      taskPlanFilter === "ALL" && "font-semibold text-emerald-600 dark:text-emerald-400 bg-accent/60"
+                    )}
+                  >
+                    All Plans
+                  </DropdownItem>
                   {plans.map((p) => (
-                    <option key={p._id} value={p._id}>
-                      {p.name}
-                    </option>
+                    <DropdownItem
+                      key={p._id}
+                      onClick={() => setTaskPlanFilter(p._id)}
+                      className={cn(
+                        "text-xs py-1.5 flex items-center gap-2",
+                        taskPlanFilter === p._id && "font-semibold text-emerald-600 dark:text-emerald-400 bg-accent/60"
+                      )}
+                    >
+                      <span
+                        className="h-2 w-2 rounded-full shrink-0"
+                        style={{ backgroundColor: p.color || "#10b981" }}
+                      />
+                      <span className="truncate">{p.name}</span>
+                    </DropdownItem>
                   ))}
-                </select>
+                </Dropdown>
               )}
             </div>
           </CardHeader>

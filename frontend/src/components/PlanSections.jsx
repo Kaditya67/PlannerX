@@ -176,13 +176,13 @@ function PlanSections({
               Add sections and items to organize your plan
             </p>
             <div className="mt-6 flex gap-3">
-              <Button onClick={onAddSection}>
+              <Button onClick={() => onAddSection && onAddSection()}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Section
               </Button>
               <Button
                 variant="outline"
-                onClick={() => onAddItem(null, null)}
+                onClick={() => onAddItem && onAddItem(null, null)}
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Add Item

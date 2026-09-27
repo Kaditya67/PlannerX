@@ -152,8 +152,16 @@ export function usePlan(planId, toast) {
   }
 
   const openSectionModal = (section = null) => {
-    // Check if section is a valid section object (and not a DOM click event or empty)
-    if (section && typeof section === "object" && (section._id || section.name)) {
+    // Strictly verify that section is a real section model object with a valid _id
+    const isActualSection =
+      section &&
+      typeof section === "object" &&
+      !section.nativeEvent &&
+      !section.target &&
+      typeof section._id === "string" &&
+      typeof section.name === "string"
+
+    if (isActualSection) {
       setEditingSection(section)
       setSectionForm({ name: section.name || "", description: section.description || "" })
     } else {
@@ -214,7 +222,15 @@ export function usePlan(planId, toast) {
   }
 
   const openItemModal = (item = null, sectionId = null) => {
-    if (item && typeof item === "object" && (item._id || item.title)) {
+    const isActualItem =
+      item &&
+      typeof item === "object" &&
+      !item.nativeEvent &&
+      !item.target &&
+      typeof item._id === "string" &&
+      typeof item.title === "string"
+
+    if (isActualItem) {
       setEditingItem(item)
       setItemForm({
         title: item.title,

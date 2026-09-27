@@ -12,9 +12,11 @@ import {
   Share2,
   Copy,
   MoreVertical,
+  BarChart3,
+  EyeOff,
 } from "lucide-react"
 
-function PlanHeader({ plan, onEditPlan, onAddSection, onDownload, onShareTemplate, onCopyTemplate, onSmartEdit, onUpdateStatus }) {
+function PlanHeader({ plan, onEditPlan, onAddSection, onDownload, onShareTemplate, onCopyTemplate, onSmartEdit, onUpdateStatus, showStats, onToggleStats }) {
   const status = plan?.status || "active"
 
   return (
@@ -38,7 +40,29 @@ function PlanHeader({ plan, onEditPlan, onAddSection, onDownload, onShareTemplat
       </div>
 
       {/* Action Bar: Primary Action + Grouped Dropdown Box */}
-      <div className="flex items-center gap-2 self-start">
+      <div className="flex items-center gap-1.5 sm:gap-2 self-start">
+        {onToggleStats && (
+          <Button
+            variant={showStats ? "secondary" : "ghost"}
+            size="sm"
+            onClick={onToggleStats}
+            className="px-2.5 sm:px-3 text-xs sm:text-sm text-muted-foreground hover:text-foreground"
+            title={showStats ? "Hide progress & stats" : "Show progress & stats"}
+          >
+            {showStats ? (
+              <>
+                <EyeOff className="h-3.5 w-3.5 sm:mr-1.5 text-muted-foreground" />
+                <span className="hidden sm:inline">Hide Stats</span>
+              </>
+            ) : (
+              <>
+                <BarChart3 className="h-3.5 w-3.5 sm:mr-1.5 text-emerald-600 dark:text-emerald-400" />
+                <span className="hidden sm:inline">Stats</span>
+              </>
+            )}
+          </Button>
+        )}
+
         <Button size="sm" onClick={onAddSection} className="shadow-sm">
           <Plus className="mr-1.5 h-4 w-4" />
           Add Section

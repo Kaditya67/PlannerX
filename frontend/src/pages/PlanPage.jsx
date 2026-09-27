@@ -58,6 +58,9 @@ function PlanPage() {
   const [smartEditorOpen, setSmartEditorOpen] = useState(false)
   const [planModalOpen, setPlanModalOpen] = useState(false)
   const [planSubmitting, setPlanSubmitting] = useState(false)
+  const [showStats, setShowStats] = useState(() => {
+    return localStorage.getItem("planner_show_plan_stats") === "true" // hidden by default!
+  })
   const [planForm, setPlanForm] = useState({
     name: "",
     description: "",
@@ -203,41 +206,49 @@ function PlanPage() {
           onCopyTemplate={handleCopyTemplate}
           onSmartEdit={() => setSmartEditorOpen(true)}
           onUpdateStatus={handleUpdateStatus}
+          showStats={showStats}
+          onToggleStats={() => {
+            const next = !showStats
+            setShowStats(next)
+            localStorage.setItem("planner_show_plan_stats", String(next))
+          }}
         />
 
-        {/* Progress Card - Compact & Responsive */}
-        <Card className="mt-4 lg:mt-6 border-border shadow-xs">
-          <CardContent className="p-3.5 sm:p-5 lg:p-6">
-            {/* Progress Bar & Percentage */}
-            <div className="mb-3.5">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs sm:text-sm font-semibold text-muted-foreground">Overall Progress</span>
-                <span className="text-sm sm:text-base font-bold text-foreground">{stats.progress}%</span>
+        {/* Progress Card - Hidden by default, togglable */}
+        {showStats && (
+          <Card className="mt-4 lg:mt-6 border-border shadow-xs animate-in fade-in duration-200">
+            <CardContent className="p-3.5 sm:p-5 lg:p-6">
+              {/* Progress Bar & Percentage */}
+              <div className="mb-3.5">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs sm:text-sm font-semibold text-muted-foreground">Overall Progress</span>
+                  <span className="text-sm sm:text-base font-bold text-foreground">{stats.progress}%</span>
+                </div>
+                <Progress value={stats.progress} className="h-2 sm:h-2.5" />
               </div>
-              <Progress value={stats.progress} className="h-2 sm:h-2.5" />
-            </div>
 
-            {/* Metrics Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 pt-2.5 border-t border-border">
-              <div className="rounded-lg bg-accent/40 p-2 sm:p-3 text-center">
-                <p className="text-base sm:text-xl font-bold text-foreground leading-tight">{stats.totalItems}</p>
-                <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Total Items</p>
+              {/* Metrics Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 pt-2.5 border-t border-border">
+                <div className="rounded-lg bg-accent/40 p-2 sm:p-3 text-center">
+                  <p className="text-base sm:text-xl font-bold text-foreground leading-tight">{stats.totalItems}</p>
+                  <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Total Items</p>
+                </div>
+                <div className="rounded-lg bg-accent/40 p-2 sm:p-3 text-center">
+                  <p className="text-base sm:text-xl font-bold text-emerald-600 dark:text-emerald-400 leading-tight">{stats.completedItems}</p>
+                  <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Completed</p>
+                </div>
+                <div className="rounded-lg bg-accent/40 p-2 sm:p-3 text-center">
+                  <p className="text-base sm:text-xl font-bold text-foreground leading-tight">{formatDuration(stats.totalDuration)}</p>
+                  <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Total Time</p>
+                </div>
+                <div className="rounded-lg bg-accent/40 p-2 sm:p-3 text-center">
+                  <p className="text-base sm:text-xl font-bold text-emerald-600 dark:text-emerald-400 leading-tight">{formatDuration(stats.completedDuration)}</p>
+                  <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Completed Time</p>
+                </div>
               </div>
-              <div className="rounded-lg bg-accent/40 p-2 sm:p-3 text-center">
-                <p className="text-base sm:text-xl font-bold text-emerald-600 dark:text-emerald-400 leading-tight">{stats.completedItems}</p>
-                <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Completed</p>
-              </div>
-              <div className="rounded-lg bg-accent/40 p-2 sm:p-3 text-center">
-                <p className="text-base sm:text-xl font-bold text-foreground leading-tight">{formatDuration(stats.totalDuration)}</p>
-                <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Total Time</p>
-              </div>
-              <div className="rounded-lg bg-accent/40 p-2 sm:p-3 text-center">
-                <p className="text-base sm:text-xl font-bold text-emerald-600 dark:text-emerald-400 leading-tight">{formatDuration(stats.completedDuration)}</p>
-                <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Completed Time</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Sections and Items */}

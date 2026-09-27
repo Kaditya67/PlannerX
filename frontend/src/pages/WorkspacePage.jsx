@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import { workspaceAPI, planAPI } from "../api/index.js"
 import { useToast } from "../context/ToastContext.jsx"
 import { useConfirm } from "../context/ConfirmContext.jsx"
-import { Plus, ArrowLeft, Folder, BookOpen, Calendar, Sun, Layers, MoreVertical, Pencil, Trash2, Archive, Bookmark, RotateCcw, Share2, FileUp, Copy, CheckCircle2, Clock, Sparkles } from "lucide-react"
+import { Plus, ArrowLeft, Folder, BookOpen, Calendar, Sun, Layers, MoreVertical, Pencil, Trash2, Archive, Bookmark, RotateCcw, Share2, FileUp, Copy, CheckCircle2, Clock, Sparkles, BarChart3, Eye, EyeOff } from "lucide-react"
 import Button from "../components/ui/Button.jsx"
 import Input from "../components/ui/Input.jsx"
 import { Card, CardContent } from "../components/ui/Card.jsx"
@@ -36,6 +36,9 @@ function WorkspacePage() {
   const [importJSONText, setImportJSONText] = useState("")
   const [importSubmitting, setImportSubmitting] = useState(false)
   const [statusFilter, setStatusFilter] = useState("active") // "active" | "stashed" | "archived" | "all"
+  const [showStats, setShowStats] = useState(() => {
+    return localStorage.getItem("planner_show_workspace_stats") === "true" // hidden by default!
+  })
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -214,7 +217,32 @@ function WorkspacePage() {
             </div>
 
             {/* Quick Actions */}
-            <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 self-start sm:self-auto">
+              {plans.length > 0 && (
+                <Button
+                  variant={showStats ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => {
+                    const next = !showStats
+                    setShowStats(next)
+                    localStorage.setItem("planner_show_workspace_stats", String(next))
+                  }}
+                  className="px-2.5 sm:px-3 text-xs sm:text-sm h-9 text-muted-foreground hover:text-foreground"
+                  title={showStats ? "Hide stats" : "Show stats"}
+                >
+                  {showStats ? (
+                    <>
+                      <EyeOff className="h-3.5 w-3.5 sm:mr-1.5 text-muted-foreground" />
+                      <span className="hidden sm:inline">Hide Stats</span>
+                    </>
+                  ) : (
+                    <>
+                      <BarChart3 className="h-3.5 w-3.5 sm:mr-1.5 text-emerald-600 dark:text-emerald-400" />
+                      <span className="hidden sm:inline">Stats</span>
+                    </>
+                  )}
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -237,9 +265,9 @@ function WorkspacePage() {
             </div>
           </div>
 
-          {/* Quick Metrics Strip */}
-          {plans.length > 0 && (
-            <div className="mt-5 pt-4 border-t border-gray-100 dark:border-gray-800/80 grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {/* Quick Metrics Strip - hidden by default, togglable */}
+          {showStats && plans.length > 0 && (
+            <div className="mt-5 pt-4 border-t border-gray-100 dark:border-gray-800/80 grid grid-cols-2 sm:grid-cols-4 gap-3 animate-in fade-in duration-200">
               <div className="flex items-center gap-2.5">
                 <div className="h-8 w-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                   <Layers className="h-4 w-4" />

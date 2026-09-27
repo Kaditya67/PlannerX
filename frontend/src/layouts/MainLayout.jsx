@@ -13,8 +13,6 @@ import {
   LogOut,
   Moon,
   Sun,
-  Menu,
-  X,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -37,16 +35,10 @@ function MainLayout() {
   const { theme, setTheme, isDark, toggleTheme } = useTheme()
   const navigate = useNavigate()
   const location = useLocation()
-  const [sidebarOpen, setSidebarOpen] = useState(false) // Mobile drawer
   const [isCollapsed, setIsCollapsed] = useLocalStorage("planner_sidebar_collapsed", false) // Desktop collapsed mode
   const [userDropdownOpen, setUserDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
   const triggerRef = useRef(null)
-
-  // Close sidebar when route changes on mobile
-  useEffect(() => {
-    setSidebarOpen(false)
-  }, [location.pathname])
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -75,22 +67,11 @@ function MainLayout() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-gray-50 dark:bg-gray-950">
-      {/* Mobile Overlay */}
-      {sidebarOpen && (
-        <div 
-          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-          aria-hidden="true"
-        />
-      )}
-
-      {/* Sidebar */}
+      {/* Sidebar - Desktop Only (Mobile uses bottom navigation) */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex h-full flex-col border-r border-gray-200 bg-white shadow-xl transition-all duration-300 ease-in-out lg:static lg:z-30 lg:shadow-none dark:border-gray-800 dark:bg-gray-900",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
-          isCollapsed ? "lg:w-16" : "lg:w-56",
-          "w-56"
+          "hidden lg:flex h-full flex-col border-r border-gray-200 bg-white transition-all duration-300 ease-in-out lg:static lg:z-30 lg:shadow-none dark:border-gray-800 dark:bg-gray-900",
+          isCollapsed ? "lg:w-16" : "lg:w-56"
         )}
       >
         {/* Logo Section */}
@@ -131,14 +112,6 @@ function MainLayout() {
               </button>
             </>
           )}
-
-          {/* Mobile Close Button */}
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className="rounded-md p-1.5 hover:bg-gray-100 lg:hidden dark:hover:bg-gray-800"
-          >
-            <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-          </button>
         </div>
 
         {/* Navigation */}
@@ -161,13 +134,12 @@ function MainLayout() {
                       : "text-gray-600 dark:text-gray-400"
                   )
                 }
-                onClick={() => setSidebarOpen(false)}
               >
                 <Icon className="h-4.5 w-4.5 shrink-0" />
-                {(!isCollapsed || sidebarOpen) && (
+                {!isCollapsed && (
                   <span className="truncate">{item.label}</span>
                 )}
-                {(!isCollapsed || sidebarOpen) && isActive && (
+                {!isCollapsed && isActive && (
                   <div className="ml-auto h-1.5 w-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400" />
                 )}
               </NavLink>
@@ -208,7 +180,7 @@ function MainLayout() {
                 size="sm"
                 className="shrink-0 ring-2 ring-offset-2 ring-transparent group-hover:ring-emerald-500/20"
               />
-              {(!isCollapsed || sidebarOpen) && (
+              {!isCollapsed && (
                 <>
                   <div className="flex-1 overflow-hidden text-left">
                     <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
@@ -262,7 +234,6 @@ function MainLayout() {
                       e.stopPropagation()
                       navigate("/settings")
                       setUserDropdownOpen(false)
-                      setSidebarOpen(false)
                     }}
                     className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors"
                   >
@@ -290,24 +261,15 @@ function MainLayout() {
       {/* Main Content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Mobile Header */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gray-200 bg-white/80 px-4 backdrop-blur-sm lg:hidden dark:border-gray-800 dark:bg-gray-900/80">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setSidebarOpen(true)}
-              className="h-9 w-9"
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-            <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded-lg bg-emerald-600 dark:bg-emerald-500" />
-              <div>
-                <h1 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                  {activeNavItem?.label || "Planner"}
-                </h1>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Dashboard</p>
-              </div>
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-gray-200 bg-white/80 px-4 backdrop-blur-sm lg:hidden dark:border-gray-800 dark:bg-gray-900/80">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600 dark:bg-emerald-500 shadow-xs">
+              <Layers className="h-4.5 w-4.5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                {activeNavItem?.label || "Planner"}
+              </h1>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -315,35 +277,36 @@ function MainLayout() {
               variant="ghost"
               size="icon"
               onClick={toggleTheme}
-              className="h-9 w-9"
+              className="h-8 w-8"
               aria-label="Toggle theme"
             >
               {isDark ? (
-                <Sun className="h-5 w-5 text-amber-500" />
+                <Sun className="h-4 w-4 text-amber-500" />
               ) : (
-                <Moon className="h-5 w-5 text-blue-500" />
+                <Moon className="h-4 w-4 text-blue-500" />
               )}
             </Button>
             <button
               onClick={() => navigate("/settings")}
-              className="h-9 w-9 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
+              className="h-8 w-8 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 flex items-center justify-center"
+              title="Settings"
             >
               <Avatar name={user?.name} size="sm" />
             </button>
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-auto p-4 lg:p-6">
+        {/* Page Content with bottom padding on mobile for the fixed tab bar */}
+        <main className="flex-1 overflow-auto p-4 pb-20 lg:p-6 lg:pb-6">
           <div className="mx-auto max-w-7xl">
             <Outlet />
           </div>
         </main>
 
-        {/* Mobile Bottom Navigation (Optional) */}
-        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white/90 backdrop-blur-sm lg:hidden dark:border-gray-800 dark:bg-gray-900/90">
-          <nav className="flex items-center justify-around p-2">
-            {navItems.slice(0, 4).map((item) => {
+        {/* Mobile Bottom Navigation */}
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white/95 backdrop-blur-md lg:hidden dark:border-gray-800 dark:bg-gray-900/95">
+          <nav className="flex items-center justify-around px-2 py-1.5 safe-bottom">
+            {navItems.map((item) => {
               const Icon = item.icon
               const isActive = location.pathname.startsWith(item.path)
               return (
@@ -351,14 +314,14 @@ function MainLayout() {
                   key={item.path}
                   onClick={() => navigate(item.path)}
                   className={cn(
-                    "flex flex-col items-center gap-1 rounded-lg p-2",
+                    "flex flex-col items-center gap-1 rounded-lg px-2.5 py-1 transition-colors",
                     isActive
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : "text-gray-500 dark:text-gray-400"
+                      ? "text-emerald-600 dark:text-emerald-400 font-semibold"
+                      : "text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
                   )}
                 >
                   <Icon className="h-5 w-5" />
-                  <span className="text-xs font-medium">{item.label}</span>
+                  <span className="text-[11px] leading-tight">{item.label}</span>
                 </button>
               )
             })}

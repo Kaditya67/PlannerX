@@ -153,14 +153,15 @@ function WorkspacesPage() {
   return (
     <div className="p-6 lg:p-8">
       {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-6 lg:mb-8 flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Workspaces</h1>
-          <p className="mt-1 text-gray-500 dark:text-gray-400">Track learning progress and roadmaps per domain</p>
+          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100">Workspaces</h1>
+          <p className="mt-1 text-xs lg:text-sm text-gray-500 dark:text-gray-400">Track learning progress and roadmaps per domain</p>
         </div>
-        <Button onClick={() => handleOpenModal()}>
-          <Plus className="mr-2 h-4 w-4" />
-          New Workspace
+        <Button onClick={() => handleOpenModal()} className="shrink-0">
+          <Plus className="h-4 w-4 sm:mr-1.5" />
+          <span className="hidden sm:inline">New Workspace</span>
+          <span className="sm:hidden">New</span>
         </Button>
       </div>
 
@@ -170,7 +171,7 @@ function WorkspacesPage() {
           <CardContent className="flex flex-col items-center justify-center py-16">
             <Folder className="h-16 w-16 text-gray-300 dark:text-gray-600" />
             <h2 className="mt-4 text-xl font-semibold text-gray-900 dark:text-gray-100">No workspaces yet</h2>
-            <p className="mt-2 text-gray-500 dark:text-gray-400">
+            <p className="mt-2 text-gray-500 dark:text-gray-400 text-center max-w-sm">
               Create your first workspace to start organizing your plans
             </p>
             <Button className="mt-6" onClick={() => handleOpenModal()}>

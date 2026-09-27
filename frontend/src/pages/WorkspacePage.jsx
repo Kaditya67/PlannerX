@@ -192,14 +192,16 @@ function WorkspacePage() {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <Button variant="outline" onClick={() => setImportModalOpen(true)}>
-              <FileUp className="mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-              Import Template
+              <FileUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400 sm:mr-1.5" />
+              <span className="hidden sm:inline">Import Template</span>
+              <span className="sm:hidden">Import</span>
             </Button>
             <Button onClick={openCreateModal}>
-              <Plus className="mr-2 h-4 w-4" />
-              New Plan
+              <Plus className="h-4 w-4 sm:mr-1.5" />
+              <span className="hidden sm:inline">New Plan</span>
+              <span className="sm:hidden">New</span>
             </Button>
           </div>
         </div>

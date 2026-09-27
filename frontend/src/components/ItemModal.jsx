@@ -1,6 +1,6 @@
-import Modal from "../components/ui/Modal.jsx"
-import Button from "../components/ui/Button.jsx"
-import Input from "../components/ui/Input.jsx"
+import Modal from "./ui/Modal.jsx"
+import Button from "./ui/Button.jsx"
+import Input from "./ui/Input.jsx"
 import { PRIORITY_CONFIG } from "../utils/constants.js"
 
 function ItemModal({

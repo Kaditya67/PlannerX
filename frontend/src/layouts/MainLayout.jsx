@@ -229,18 +229,21 @@ function MainLayout() {
             {/* Custom Dropdown */}
             {userDropdownOpen && (
               <div className={cn(
-                "absolute bottom-full mb-2 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900 z-50",
-                isCollapsed ? "left-0 w-52" : "left-0 right-0"
+                "absolute rounded-lg border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900 z-50 overflow-hidden",
+                isCollapsed 
+                  ? "left-full bottom-0 ml-2.5 w-52" 
+                  : "bottom-full left-0 right-0 mb-2"
               )}>
                 <div className="py-1">
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation()
                       toggleTheme()
                       setUserDropdownOpen(false)
                     }}
                     className="flex w-full items-center gap-2 px-4 py-2.5 text-sm
                               text-gray-700 hover:bg-gray-50
-                              dark:text-gray-300 dark:hover:bg-gray-800"
+                              dark:text-gray-300 dark:hover:bg-gray-800 transition-colors"
                   >
                     {isDark ? (
                       <>
@@ -255,20 +258,24 @@ function MainLayout() {
                     )}
                   </button>
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation()
                       navigate("/settings")
                       setUserDropdownOpen(false)
                       setSidebarOpen(false)
                     }}
-                    className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
+                    className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors"
                   >
                     <Settings className="h-4 w-4" />
                     Settings
                   </button>
                   <div className="my-1 h-px bg-gray-200 dark:bg-gray-700" />
                   <button
-                    onClick={handleLogout}
-                    className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleLogout()
+                    }}
+                    className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors"
                   >
                     <LogOut className="h-4 w-4" />
                     Logout

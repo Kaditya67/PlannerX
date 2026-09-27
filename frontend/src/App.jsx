@@ -16,9 +16,11 @@ import EditPlanPage from "./pages/EditPlanPage.jsx"
 import CalendarPage from "./pages/CalendarPage.jsx"
 import FocusPage from "./pages/FocusPage.jsx"
 import SettingsPage from "./pages/SettingsPage.jsx"
+import AdminPage from "./pages/AdminPage.jsx"
 
 import LoadingScreen from "./components/ui/LoadingScreen.jsx"
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx"
+import AdminRoute from "./components/auth/AdminRoute.jsx"
 
 function App() {
   const { user, loading } = useAuth()
@@ -54,6 +56,14 @@ function App() {
         <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/focus" element={<FocusPage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminPage />
+            </AdminRoute>
+          }
+        />
       </Route>
 
       {/* Catch all */}

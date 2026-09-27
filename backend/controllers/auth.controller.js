@@ -2,6 +2,10 @@ import asyncHandler from "express-async-handler"
 import connectDB from "../config/db.js"  // Adjust path from api folder
 import User from "../models/user.model.js"  // Adjust path from api folder
 import Workspace from "../models/workspace.model.js"
+import Plan from "../models/plan.model.js"
+import Section from "../models/section.model.js"
+import Item from "../models/item.model.js"
+import Session from "../models/session.model.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 
 // Helper to send token response
@@ -20,6 +24,7 @@ const sendTokenResponse = (user, statusCode, res) => {
     name: user.name,
     email: user.email,
     avatar: user.avatar,
+    role: user.role || "user",
     preferences: user.preferences,
     dailyCapacity: user.dailyCapacity,
   }
@@ -97,6 +102,38 @@ export const login = asyncHandler(async (req, res) => {
   if (!isMatch) {
     res.status(401)
     throw new Error("Invalid credentials")
+  }
+
+  // If this is the demo account and older than 1 day, reset its experiments
+  if (user.email === "demo@planner.com") {
+    const ONE_DAY_MS = 24 * 60 * 60 * 1000
+    const lastSessionTime = new Date(user.updatedAt || user.createdAt).getTime()
+    if (Date.now() - lastSessionTime > ONE_DAY_MS) {
+      const userWorkspaces = await Workspace.find({ owner: user._id })
+      const workspaceIds = userWorkspaces.map((w) => w._id)
+      const userPlans = await Plan.find({ $or: [{ createdBy: user._id }, { workspace: { $in: workspaceIds } }] })
+      const planIds = userPlans.map((p) => p._id)
+
+      await Promise.all([
+        Item.deleteMany({ plan: { $in: planIds } }),
+        Section.deleteMany({ plan: { $in: planIds } }),
+        Session.deleteMany({ user: user._id }),
+        Plan.deleteMany({ _id: { $in: planIds } }),
+        Workspace.deleteMany({ owner: user._id }),
+      ])
+
+      await Workspace.create({
+        name: "Personal",
+        description: "Default personal workspace",
+        color: "#10B981",
+        icon: "folder",
+        owner: user._id,
+        members: [],
+      })
+
+      user.updatedAt = new Date()
+      await user.save()
+    }
   }
 
   sendTokenResponse(user, 200, res)
@@ -192,6 +229,9 @@ export const demoLogin = asyncHandler(async (req, res) => {
 
   let user = await User.findOne({ email: demoEmail, isDeleted: false }).select("+password")
 
+  const ONE_DAY_MS = 24 * 60 * 60 * 1000
+  const now = new Date()
+
   if (!user) {
     user = await User.create({
       name: "Demo User",
@@ -208,6 +248,41 @@ export const demoLogin = asyncHandler(async (req, res) => {
       owner: user._id,
       members: [],
     })
+  } else {
+    // Check if the user's demo session is older than 1 day
+    const lastSessionTime = new Date(user.updatedAt || user.createdAt).getTime()
+    const isExpired = Date.now() - lastSessionTime > ONE_DAY_MS
+
+    if (isExpired) {
+      // Purge all experimental data created by this demo user
+      const userWorkspaces = await Workspace.find({ owner: user._id })
+      const workspaceIds = userWorkspaces.map((w) => w._id)
+      const userPlans = await Plan.find({ $or: [{ createdBy: user._id }, { workspace: { $in: workspaceIds } }] })
+      const planIds = userPlans.map((p) => p._id)
+
+      await Promise.all([
+        Item.deleteMany({ plan: { $in: planIds } }),
+        Section.deleteMany({ plan: { $in: planIds } }),
+        Session.deleteMany({ user: user._id }),
+        Plan.deleteMany({ _id: { $in: planIds } }),
+        Workspace.deleteMany({ owner: user._id }),
+      ])
+
+      // Re-provision fresh personal workspace
+      await Workspace.create({
+        name: "Personal",
+        description: "Default personal workspace",
+        color: "#10B981",
+        icon: "folder",
+        owner: user._id,
+        members: [],
+      })
+
+      // Reset password and touch updatedAt so a fresh 1-day window starts
+      user.password = demoPassword
+      user.updatedAt = now
+      await user.save()
+    }
   }
 
   sendTokenResponse(user, 200, res)

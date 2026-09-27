@@ -10,6 +10,7 @@ import planRoutes from "./routes/plan.routes.js"
 import sectionRoutes from "./routes/section.routes.js"
 import itemRoutes from "./routes/item.routes.js"
 import sessionRoutes from "./routes/session.routes.js"
+import adminRoutes from "./routes/admin.routes.js"
 
 // Middleware imports
 import errorHandler from "./middlewares/error.middleware.js"
@@ -107,6 +108,7 @@ app.use("/api/plans", planRoutes)
 app.use("/api/sections", sectionRoutes)
 app.use("/api/items", itemRoutes)
 app.use("/api/sessions", sessionRoutes)
+app.use("/api/admin", adminRoutes)
 
 /* -------------------------------------------
    ERROR HANDLING

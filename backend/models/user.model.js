@@ -33,6 +33,11 @@ const userSchema = new mongoose.Schema(
       min: 0,
       max: 1440,
     },
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+    },
     preferences: {
       theme: { type: String, enum: ["light", "dark", "system"], default: "system" },
       defaultView: { type: String, enum: ["tree", "timeline", "calendar", "focus"], default: "tree" },
